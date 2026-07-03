@@ -1,0 +1,202 @@
+%% ============================================================
+%% Agentic AI-Based 5G Network Slice Orchestrator — Major Project Report
+%% KLE Technological University, Hubballi
+%% ============================================================
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[a4paper, top=25mm, bottom=25mm, left=35mm, right=20mm]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb, mathtools}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage[hidelinks]{hyperref}
+\usepackage[dvipsnames,svgnames,table]{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{float}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{rotating}
+\usepackage{pgfplots}
+\usepackage{pgfplotstable}
+\usepackage{tikz}
+\usepackage{cite}
+\usepackage[most]{tcolorbox}
+\setlength{\headheight}{14.5pt}
+
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{shapes.geometric, shapes.misc, arrows.meta, positioning,
+                decorations.pathreplacing, calc, backgrounds, fit, matrix}
+
+%% Page style
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\small Agentic AI-Based 5G Network Slice Orchestrator}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% Chapter title format
+\titleformat{\chapter}[block]
+  {\normalfont\Large\bfseries\centering}{Chapter \thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{30pt}{20pt}
+
+%% Listings
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true, breakatwhitespace=true,
+  frame=single,
+  backgroundcolor=\color{gray!8},
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{green!60!black},
+  stringstyle=\color{red!60!yellow},
+  numbers=left, numberstyle=\tiny\color{gray},
+  numbersep=5pt, xleftmargin=12pt,
+  captionpos=b
+}
+
+%% Algorithm style tweaks
+\algrenewcommand\algorithmicindent{1.2em}
+\algrenewcommand{\algorithmicrequire}{\textbf{Input:}}
+\algrenewcommand{\algorithmicensure}{\textbf{Output:}}
+
+%% Colours — project palette
+\definecolor{agentblue}{RGB}{30,100,190}
+\definecolor{slicegreen}{RGB}{40,160,80}
+\definecolor{urllcred}{RGB}{200,50,50}
+\definecolor{embbblue}{RGB}{50,100,200}
+\definecolor{mmtcgray}{RGB}{100,120,100}
+% Extended palette matching reports/architectures.pdf
+\definecolor{cran}{HTML}{4B5563}
+\definecolor{c5g}{HTML}{1E3A5F}
+\definecolor{cembb}{HTML}{1D4ED8}
+\definecolor{curllc}{HTML}{DC2626}
+\definecolor{cmmtc}{HTML}{15803D}
+\definecolor{cqos}{HTML}{D97706}
+\definecolor{cprom}{HTML}{EA580C}
+\definecolor{cgraf}{HTML}{0D9488}
+\definecolor{corch}{HTML}{7C3AED}
+\definecolor{ccontrib}{HTML}{1E40AF}
+
+%% Contribution box style
+\tcbuselibrary{skins,breakable}
+\newtcolorbox{contribbox}[1]{
+  colback=ccontrib!5, colframe=ccontrib!60,
+  fonttitle=\bfseries\small, title=#1,
+  breakable, left=6pt, right=6pt, top=4pt, bottom=4pt,
+  arc=4pt
+}
+
+\begin{document}
+
+%% ---- Cover Page
+\begin{titlepage}
+\centering
+{\large\bfseries SCHOOL OF COMPUTER SCIENCE AND ENGINEERING}\\[0.3cm]
+{\large KLE Technological University, Hubballi -- 580031}\\[1cm]
+\rule{\linewidth}{0.5pt}\\[0.4cm]
+{\Large\bfseries Major Project Report}\\[0.3cm]
+{\large On}\\[0.5cm]
+{\LARGE\bfseries Agentic AI-Based 5G Network Slice Orchestrator:\\[0.2cm]
+Autonomous QoS Management using Large Language Models\\[0.2cm]
+and Multi-Agent Reasoning}\\[0.5cm]
+\rule{\linewidth}{0.5pt}\\[0.5cm]
+{\normalsize submitted in partial fulfillment of the requirements for the award of the degree of}\\[0.4cm]
+{\large\bfseries Bachelor of Engineering}\\
+{\normalsize in}\\
+{\large\bfseries COMPUTER SCIENCE AND ENGINEERING}\\[1.2cm]
+{\normalsize\bfseries Submitted By}\\[0.4cm]
+\begin{tabular}{ll}
+Simran R Kalkeri       & 01FE23BCI087 \\[4pt]
+Amaanali D Doddamani   & 01FE23BCI091 \\[4pt]
+Sparsh Sunil Naik      & 01FE23BCI085 \\[4pt]
+Rishi P Kulkarni       & 01FE23BCI088 \\
+\end{tabular}\\[1.2cm]
+{\normalsize Under the guidance of}\\[0.3cm]
+{\large\bfseries Dr.\ Narayan D G}\\
+{\normalsize Professor, School of Computer Science and Engineering}\\[0.5cm]
+{\normalsize KLE Technological University, Hubballi}\\[1cm]
+{\large 2025--2026}
+\end{titlepage}
+
+%% ---- Certificate
+\newpage\thispagestyle{empty}
+\begin{center}{\Large\bfseries CERTIFICATE}\end{center}
+\vspace{1cm}
+\noindent
+This is to certify that the project entitled \textbf{``Agentic AI-Based 5G Network Slice Orchestrator: Autonomous QoS Management using Large Language Models and Multi-Agent Reasoning''} is a bona fide work carried out by the student team (Simran R Kalkeri -- 01FE23BCI087, Amaanali D Doddamani -- 01FE23BCI091, Sparsh Sunil Naik -- 01FE23BCI085, Rishi P Kulkarni -- 01FE23BCI088), in partial fulfillment of the requirements for the 6th semester B.E.\ course during the academic year 2025--2026. The project report has been approved as it satisfies the academic requirements prescribed for the said course.
+\vspace{2cm}\\
+\begin{tabular}{p{6cm}p{6cm}}
+Dr.\ Narayan D G & Dr.\ Meena S.\ M. \\
+\textit{Guide} & \textit{Head of the Department}
+\end{tabular}
+\vspace{2cm}
+\begin{center}{\bfseries External Viva-Voce}\end{center}
+\begin{tabular}{p{9cm}p{5cm}}
+Name of the Examiner & Signature with Date \\[0.8cm]
+1.\ \dotfill & \dotfill \\[0.8cm]
+2.\ \dotfill & \dotfill \\
+\end{tabular}
+
+%% ---- Acknowledgement
+\newpage\thispagestyle{empty}
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+We express our sincere gratitude to our faculty and management for their professional guidance and support throughout the course of this project. We thank Dr.\ Ashok Shettar, Vice-Chancellor, Dr.\ B.S.\ Anami, Registrar, and Dr.\ P.G.\ Tewari, Dean Academics, KLE Technological University, Hubballi, for their vision and institutional support.
+
+We acknowledge Dr.\ Meena S.\ M., Professor and Head, SoCSE, for providing direction and facilitating an environment conducive to academic growth and engineering innovation.
+
+We sincerely thank our guide, Dr.\ Narayan D G, Professor, SoCSE, for his unwavering guidance, invaluable suggestions, and constant encouragement throughout the design, implementation, and evaluation phases of this project.
+
+We extend our gratitude to Mr.\ Naveen Kumar for helping us navigate the complex landscape of cloud-native 5G infrastructure and Kubernetes-based deployments. We also thank project coordinators Mr.\ Uday N.\ Kulkarni and Mr.\ Guruprasad Konnuramath for their administrative support.
+
+\vspace{2cm}
+\begin{flushright}
+Simran R Kalkeri -- 01FE23BCI087 \\
+Amaanali D Doddamani -- 01FE23BCI091 \\
+Sparsh Sunil Naik -- 01FE23BCI085 \\
+Rishi P Kulkarni -- 01FE23BCI088
+\end{flushright}
+
+%% ---- Abstract
+\newpage
+\chapter*{ABSTRACT}
+\addcontentsline{toc}{chapter}{ABSTRACT}
+Network slicing is a foundational capability of 5G networks, enabling simultaneous support of enhanced Mobile Broadband (eMBB), Ultra-Reliable Low-Latency Communication (URLLC), and massive Machine-Type Communication (mMTC) on shared physical infrastructure. While prior work has demonstrated static and rule-based adaptive slicing, these approaches cannot reason about root causes of QoS degradation or adapt decisions based on accumulated operational experience.
+
+This project presents the design, implementation, and evaluation of an \textbf{Agentic AI-Based 5G Network Slice Orchestrator}: a fully autonomous closed-loop control system in which a Large Language Model (LLM) backed agent performs slice-level QoS orchestration. The system is built on an Open5GS 5G Standalone core, UERANSIM-based RAN emulation, and a Kubernetes-managed user-plane deployment with per-slice traffic shaping via Linux \texttt{tc}. A LangGraph multi-agent architecture---comprising a Monitoring Agent, Planning Agent, Execution Agent, and Agent Memory---implements a structured observe$\rightarrow$think$\rightarrow$validate$\rightarrow$act$\rightarrow$reflect control loop.
+
+Six research contributions are made: (1) an Autonomous QoS Orchestration Framework, (2) a LangGraph Multi-Agent Architecture, (3) a Chain-of-Thought Network Reasoning schema requiring explicit \texttt{root\_cause\_assessment} and \texttt{lever\_validity} fields, (4) a Wrong-Lever Avoidance Mechanism using a novel relative load metric \texttt{embb\_load\_fraction}, (5) a Memory-Assisted Decision subsystem providing historical context, and (6) a rigorous Comparative Evaluation against a rule-based baseline.
+
+Experimental results demonstrate: 96.3\% URLLC SLA compliance (vs. 87.1\%), 4.2\,s mean recovery time (vs. 8.4\,s), 72\% reduction in eMBB throughput loss, and full Chain-of-Thought decision traces for post-hoc audit.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} 5G Network Slicing, Autonomous Orchestration, Large Language Model, Chain-of-Thought Reasoning, Quality of Service, LangGraph, Multi-Agent System, Open5GS, Kubernetes, URLLC, eMBB, mMTC
+
+%% ---- TOC / LOT / LOF
+\newpage\tableofcontents
+\newpage\listoftables
+\newpage\listoffigures
+
+\pagenumbering{arabic}\setcounter{page}{1}
+
+%% ---- Include chapters
+\include{ch1_introduction}
+\include{ch3_system_design}
+\include{ch_algorithms}
+\include{ch4_implementation}
+\include{ch5_results}
+\include{ch6_conclusion}
+
+\end{document}

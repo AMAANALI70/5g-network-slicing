@@ -1,0 +1,112 @@
+---
+# ============================================================
+# Unified UPF — Node 2 (kube2 / 192.168.49.181) ConfigMap
+# Single UPF serving all 3 slices
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-node2-config
+  namespace: embb
+data:
+  upf.yaml: |
+    logger:
+      file:
+        path: /var/log/open5gs/upf-node2.log
+      level: info
+    global:
+      max:
+        ue: 1024
+    upf:
+      pfcp:
+        server:
+          - address: 192.168.49.181
+            port: 8805
+          - address: 192.168.49.181
+            port: 8806
+          - address: 192.168.49.181
+            port: 8807
+      gtpu:
+        server:
+          - address: 192.168.49.181
+            port: 2152
+      session:
+        - subnet: 10.45.0.0/24
+          gateway: 10.45.0.1
+          dev: ogstun-embb
+          dnn: internet
+        - subnet: 10.46.0.0/24
+          gateway: 10.46.0.1
+          dev: ogstun-urllc
+          dnn: urllc
+        - subnet: 10.47.0.0/24
+          gateway: 10.47.0.1
+          dev: ogstun-mmtc
+          dnn: iot
+
+---
+# ============================================================
+# Unified UPF — Node 2 Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf-node2
+  namespace: embb
+  labels:
+    app: upf-node2
+    component: upf
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upf-node2
+  template:
+    metadata:
+      labels:
+        app: upf-node2
+        component: upf
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: kube2
+      containers:
+        - name: upf
+          image: 192.168.49.174:5000/open5gs-upf-unified:v1
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]
+          env:
+            - name: UPF_CONFIG
+              value: "/config/upf.yaml"
+            - name: TUN_DEVICES
+              value: "ogstun-embb:10.45.0.0/24:10.45.0.1/24,ogstun-urllc:10.46.0.0/24:10.46.0.1/24,ogstun-mmtc:10.47.0.0/24:10.47.0.1/24"
+            - name: TC_DEV
+              value: "ogstun-embb"
+            - name: TC_RATE
+              value: "100mbit"
+            - name: TC_CEIL
+              value: "100mbit"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "1Gi"
+              cpu: "1500m"
+      volumes:
+        - name: config
+          configMap:
+            name: upf-node2-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice

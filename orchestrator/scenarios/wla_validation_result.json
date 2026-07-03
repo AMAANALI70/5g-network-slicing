@@ -1,0 +1,42 @@
+{
+  "total": 3,
+  "correct_avoidances": 3,
+  "wla_triggered": 0,
+  "uncaught_errors": 0,
+  "pass": true,
+  "results": [
+    {
+      "cycle": 1,
+      "action": "no_action",
+      "confidence": 1.0,
+      "root_cause": "RTT elevation is caused by an external factor (netem delay, routing, or core network latency), as eMBB is idle and throttling it will have zero effect on URLLC RTT.",
+      "lever_validity": "Throttling eMBB will not address the identified root cause of elevated RTT due to external factors, making throttle_embb an ineffective action.",
+      "wrong_lever_event": false,
+      "verdict": "\u2705  CORRECT AVOIDANCE \u2014 LLM chose non-throttle action",
+      "latency_s": 59.13,
+      "total_tokens": 1593
+    },
+    {
+      "cycle": 2,
+      "action": "no_action",
+      "confidence": 1.0,
+      "root_cause": "RTT elevation is caused by an external factor (netem delay, routing, or core network latency), as eMBB is idle and throttling it will have zero effect on URLLC RTT.",
+      "lever_validity": "Throttling eMBB will not address the identified root cause of external network factors, so no_action is the correct course of action.",
+      "wrong_lever_event": false,
+      "verdict": "\u2705  CORRECT AVOIDANCE \u2014 LLM chose non-throttle action",
+      "latency_s": 26.26,
+      "total_tokens": 1632
+    },
+    {
+      "cycle": 3,
+      "action": "no_action",
+      "confidence": 1.0,
+      "root_cause": "RTT elevation is caused by an external factor (netem delay, routing, or core network latency), as eMBB is idle and throttling it will have zero effect on URLLC RTT.",
+      "lever_validity": "Throttling eMBB will not address the identified root cause of netem delay, so no_action is the correct course of action.",
+      "wrong_lever_event": false,
+      "verdict": "\u2705  CORRECT AVOIDANCE \u2014 LLM chose non-throttle action",
+      "latency_s": 26.76,
+      "total_tokens": 1691
+    }
+  ]
+}

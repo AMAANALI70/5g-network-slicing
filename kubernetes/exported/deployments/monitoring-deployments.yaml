@@ -1,0 +1,282 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "17"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"grafana"},"name":"grafana","namespace":"monitoring"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"grafana"}},"template":{"metadata":{"labels":{"app":"grafana"}},"spec":{"containers":[{"env":[{"name":"GF_SECURITY_ADMIN_USER","value":"admin"},{"name":"GF_SECURITY_ADMIN_PASSWORD","value":"admin"},{"name":"GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH","value":"/var/lib/grafana/dashboards/slice-monitoring.json"}],"image":"grafana/grafana:10.4.1","livenessProbe":{"httpGet":{"path":"/api/health","port":3000},"initialDelaySeconds":30,"periodSeconds":15},"name":"grafana","ports":[{"containerPort":3000,"name":"web"}],"readinessProbe":{"httpGet":{"path":"/api/health","port":3000},"initialDelaySeconds":15,"periodSeconds":5},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"volumeMounts":[{"mountPath":"/etc/grafana/provisioning/datasources","name":"datasources"},{"mountPath":"/etc/grafana/provisioning/dashboards","name":"dashboard-provider"},{"mountPath":"/var/lib/grafana/dashboards/slice-monitoring.json","name":"dashboards","subPath":"slice-monitoring.json"},{"mountPath":"/var/lib/grafana/dashboards/qos-orchestrator.json","name":"orchestrator-dashboard","subPath":"qos-orchestrator.json"},{"mountPath":"/var/lib/grafana/dashboards/hierarchical-qos.json","name":"hierarchical-dashboard","subPath":"hierarchical-qos.json"},{"mountPath":"/var/lib/grafana/dashboards/slice-apps.json","name":"app-dashboard","subPath":"slice-apps.json"},{"mountPath":"/var/lib/grafana","name":"data"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kubemaster"},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane"}],"volumes":[{"configMap":{"name":"grafana-datasources"},"name":"datasources"},{"configMap":{"name":"grafana-dashboard-provider"},"name":"dashboard-provider"},{"configMap":{"name":"grafana-dashboards"},"name":"dashboards"},{"configMap":{"name":"grafana-orchestrator-dashboard"},"name":"orchestrator-dashboard"},{"configMap":{"name":"grafana-hierarchical-dashboard"},"name":"hierarchical-dashboard"},{"configMap":{"name":"grafana-app-dashboard"},"name":"app-dashboard"},{"emptyDir":{},"name":"data"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 18
+    labels:
+      app: grafana
+    name: grafana
+    namespace: monitoring
+    resourceVersion: "6006557"
+    uid: 46a03b1e-3d62-4da1-99c5-e62dd25016c3
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: grafana
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-06-04T00:31:50+05:30"
+        creationTimestamp: null
+        labels:
+          app: grafana
+      spec:
+        containers:
+        - env:
+          - name: GF_SECURITY_ADMIN_USER
+            value: admin
+          - name: GF_SECURITY_ADMIN_PASSWORD
+            value: admin
+          - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+            value: /var/lib/grafana/dashboards/slice-monitoring.json
+          image: grafana/grafana:10.4.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: grafana
+          ports:
+          - containerPort: 3000
+            name: web
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /api/health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/grafana/provisioning/datasources
+            name: datasources
+          - mountPath: /etc/grafana/provisioning/dashboards
+            name: dashboard-provider
+          - mountPath: /var/lib/grafana/dashboards/slice-monitoring.json
+            name: dashboards
+            subPath: slice-monitoring.json
+          - mountPath: /var/lib/grafana/dashboards/qos-orchestrator.json
+            name: orchestrator-dashboard
+            subPath: qos-orchestrator.json
+          - mountPath: /var/lib/grafana/dashboards/hierarchical-qos.json
+            name: hierarchical-dashboard
+            subPath: hierarchical-qos.json
+          - mountPath: /var/lib/grafana/dashboards/slice-apps.json
+            name: app-dashboard
+            subPath: slice-apps.json
+          - mountPath: /var/lib/grafana
+            name: data
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kubemaster
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: grafana-datasources
+          name: datasources
+        - configMap:
+            defaultMode: 420
+            name: grafana-dashboard-provider
+          name: dashboard-provider
+        - configMap:
+            defaultMode: 420
+            name: grafana-dashboards
+          name: dashboards
+        - configMap:
+            defaultMode: 420
+            name: grafana-orchestrator-dashboard
+          name: orchestrator-dashboard
+        - configMap:
+            defaultMode: 420
+            name: grafana-hierarchical-dashboard
+          name: hierarchical-dashboard
+        - configMap:
+            defaultMode: 420
+            name: grafana-app-dashboard
+          name: app-dashboard
+        - emptyDir: {}
+          name: data
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-04-12T06:57:57Z"
+      lastUpdateTime: "2026-06-03T19:04:23Z"
+      message: ReplicaSet "grafana-7fcf854d8f" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-06-09T08:59:48Z"
+      lastUpdateTime: "2026-06-09T08:59:48Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 18
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "15"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"prometheus"},"name":"prometheus","namespace":"monitoring"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"prometheus"}},"template":{"metadata":{"labels":{"app":"prometheus"}},"spec":{"containers":[{"args":["--config.file=/etc/prometheus/prometheus.yml","--storage.tsdb.path=/prometheus","--storage.tsdb.retention.time=7d","--web.listen-address=:9090","--web.enable-lifecycle"],"image":"prom/prometheus:v2.51.0","livenessProbe":{"httpGet":{"path":"/-/healthy","port":9090},"initialDelaySeconds":15,"periodSeconds":15},"name":"prometheus","ports":[{"containerPort":9090,"name":"web"}],"readinessProbe":{"httpGet":{"path":"/-/ready","port":9090},"initialDelaySeconds":10,"periodSeconds":5},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}},"volumeMounts":[{"mountPath":"/etc/prometheus","name":"config"},{"mountPath":"/prometheus","name":"data"}]}],"nodeSelector":{"kubernetes.io/hostname":"kubemaster"},"serviceAccountName":"prometheus","tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane"}],"volumes":[{"configMap":{"name":"prometheus-config"},"name":"config"},{"emptyDir":{"sizeLimit":"1Gi"},"name":"data"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 16
+    labels:
+      app: prometheus
+    name: prometheus
+    namespace: monitoring
+    resourceVersion: "6397140"
+    uid: 9ff2188c-0dbf-40e3-b932-3ef3edb553dd
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: prometheus
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-06-01T14:31:05+05:30"
+        creationTimestamp: null
+        labels:
+          app: prometheus
+      spec:
+        containers:
+        - args:
+          - --config.file=/etc/prometheus/prometheus.yml
+          - --storage.tsdb.path=/prometheus
+          - --storage.tsdb.retention.time=7d
+          - --web.listen-address=:9090
+          - --web.enable-lifecycle
+          image: prom/prometheus:v2.51.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /-/healthy
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: prometheus
+          ports:
+          - containerPort: 9090
+            name: web
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /-/ready
+              port: 9090
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/prometheus
+            name: config
+          - mountPath: /prometheus
+            name: data
+        dnsPolicy: ClusterFirst
+        nodeSelector:
+          kubernetes.io/hostname: kubemaster
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: prometheus
+        serviceAccountName: prometheus
+        terminationGracePeriodSeconds: 30
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: prometheus-config
+          name: config
+        - emptyDir:
+            sizeLimit: 1Gi
+          name: data
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-05-30T10:27:06Z"
+      lastUpdateTime: "2026-06-01T09:01:16Z"
+      message: ReplicaSet "prometheus-f8687d7d5" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-06-12T08:29:47Z"
+      lastUpdateTime: "2026-06-12T08:29:47Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 16
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""

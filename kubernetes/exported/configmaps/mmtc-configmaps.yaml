@@ -1,0 +1,254 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIIAs2gaY8mJ7MwDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNjA0MTIwNTQ5NTZaFw0zNjA0MDkwNTU0NTZaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQDVzxM0KG4jz2D2jqwcslibvAUB5UnFCp6NKAdMc/KMx+kvMwYKvfqpLuQA
+      gW+L+iaVpbvwPOsVF33LdHIzfOlgYPKljGiM2LEwu5RhZps6GouSjP8NnnS5A0Dc
+      6KR5G240ZB+Zfe3BcruV8PYuviAQdPWIbFwLJ1v1A5GmAqnjWPppSkdnnTS0g0rv
+      kWiv3TO6ypoP90V4V+rnAIhnr3GhHyJwOfwZV/rJ28N8reeBu+KPAma4KQiG4dOL
+      cw+WJSOHSogJ27Y21s6BHTwWjrppiqPbES+EklRDb7/feow/ISh/bzNMZmV4xoeW
+      /9Lvc3KQRuO8phlkWt53oExymLWrAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRSsNXBE3/RvxgADDNnAuYRAptE+TAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQB4aH/w4GvW
+      h3pOI1S0VrDkUEj7wASU36a7cDOppw9OktkuLAzslpBeOge09yqCo1paSncWjGHl
+      hq/S4kzo9Ww8Emjgupsu8UXnC6Xj4AzhoqlRsm3V1BAHE9l8rQj2Lv0BX+QcCdRz
+      AxxSoq/rTFL8mJuvgiI+4WIvU153uHQQcW+qsEKZAa6/AZKkuOgTGBQJdU+is8qd
+      k5RtnjY7D9zlH3AsNphHxqSn2sCmqj4WrALqrf0bHKKQwwGmVOcDIlsJt1kOpZ+C
+      MG9l+cDDWqB8//fmV7PN2zaQoR1kCGW+B5lPF48R1NiBoFLNAKjYamjjc7xxAvrI
+      969sRYkvXnLV
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-04-12T06:41:34Z"
+    name: kube-root-ca.crt
+    namespace: mmtc
+    resourceVersion: "4592"
+    uid: 646023c1-028a-4712-8e05-1a9d785e31d7
+- apiVersion: v1
+  data:
+    flows.json: |
+      [
+        {
+          "id": "flow-mmtc-main",
+          "type": "tab",
+          "label": "mMTC IoT Processing"
+        },
+        {
+          "id": "mqtt-broker-config",
+          "type": "mqtt-broker",
+          "name": "Mosquitto Local",
+          "broker": "mmtc-app",
+          "port": "1883",
+          "clientid": "nodered-mmtc-processor",
+          "autoConnect": true,
+          "usetls": false,
+          "keepalive": "60",
+          "cleansession": true
+        },
+        {
+          "id": "mqtt-sub-sensors",
+          "type": "mqtt in",
+          "z": "flow-mmtc-main",
+          "name": "All Sensor Data",
+          "topic": "sensors/#",
+          "qos": "1",
+          "broker": "mqtt-broker-config",
+          "x": 130,
+          "y": 120,
+          "wires": [["parse-sensor"]]
+        },
+        {
+          "id": "mqtt-sub-vehicles",
+          "type": "mqtt in",
+          "z": "flow-mmtc-main",
+          "name": "Vehicle Telemetry",
+          "topic": "vehicles/#",
+          "qos": "1",
+          "broker": "mqtt-broker-config",
+          "x": 130,
+          "y": 200,
+          "wires": [["parse-sensor"]]
+        },
+        {
+          "id": "mqtt-sub-heartbeat",
+          "type": "mqtt in",
+          "z": "flow-mmtc-main",
+          "name": "Device Heartbeats",
+          "topic": "devices/heartbeat/#",
+          "qos": "0",
+          "broker": "mqtt-broker-config",
+          "x": 130,
+          "y": 280,
+          "wires": [["count-heartbeats"]]
+        },
+        {
+          "id": "parse-sensor",
+          "type": "function",
+          "z": "flow-mmtc-main",
+          "name": "Parse + Tag",
+          "func": "try {\n  var d = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload;\n  d._topic = msg.topic;\n  d._ts = Date.now();\n  d._slice = 'mmtc';\n  msg.payload = d;\n} catch(e) {\n  msg.payload = {raw: msg.payload, error: e.message, _ts: Date.now()};\n}\nreturn msg;",
+          "outputs": 1,
+          "x": 360,
+          "y": 160,
+          "wires": [["influx-write", "debug-sensor"]]
+        },
+        {
+          "id": "count-heartbeats",
+          "type": "function",
+          "z": "flow-mmtc-main",
+          "name": "Track Devices",
+          "func": "context.set('last_hb_' + msg.topic, Date.now());\nmsg.payload = {device: msg.topic, ts: Date.now()};\nreturn msg;",
+          "outputs": 1,
+          "x": 360,
+          "y": 280,
+          "wires": [["debug-sensor"]]
+        },
+        {
+          "id": "influx-write",
+          "type": "debug",
+          "z": "flow-mmtc-main",
+          "name": "Telemetry Store (InfluxDB)",
+          "active": true,
+          "tosidebar": true,
+          "console": false,
+          "tostatus": false,
+          "complete": "payload",
+          "x": 600,
+          "y": 160,
+          "wires": []
+        },
+        {
+          "id": "debug-sensor",
+          "type": "debug",
+          "z": "flow-mmtc-main",
+          "name": "Sensor Debug",
+          "active": false,
+          "x": 600,
+          "y": 280,
+          "wires": []
+        }
+      ]
+    settings.js: |
+      module.exports = {
+          uiPort: 1880,
+          flowFile: 'flows.json',
+          userDir: '/data',
+          httpAdminRoot: '/',
+          httpNodeRoot: '/api',
+          logging: { console: { level: "warn" } },
+          editorTheme: { page: { title: "mMTC — IoT Telemetry Processor" } }
+      }
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"flows.json":"[\n  {\n    \"id\": \"flow-mmtc-main\",\n    \"type\": \"tab\",\n    \"label\": \"mMTC IoT Processing\"\n  },\n  {\n    \"id\": \"mqtt-broker-config\",\n    \"type\": \"mqtt-broker\",\n    \"name\": \"Mosquitto Local\",\n    \"broker\": \"mmtc-app\",\n    \"port\": \"1883\",\n    \"clientid\": \"nodered-mmtc-processor\",\n    \"autoConnect\": true,\n    \"usetls\": false,\n    \"keepalive\": \"60\",\n    \"cleansession\": true\n  },\n  {\n    \"id\": \"mqtt-sub-sensors\",\n    \"type\": \"mqtt in\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"All Sensor Data\",\n    \"topic\": \"sensors/#\",\n    \"qos\": \"1\",\n    \"broker\": \"mqtt-broker-config\",\n    \"x\": 130,\n    \"y\": 120,\n    \"wires\": [[\"parse-sensor\"]]\n  },\n  {\n    \"id\": \"mqtt-sub-vehicles\",\n    \"type\": \"mqtt in\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"Vehicle Telemetry\",\n    \"topic\": \"vehicles/#\",\n    \"qos\": \"1\",\n    \"broker\": \"mqtt-broker-config\",\n    \"x\": 130,\n    \"y\": 200,\n    \"wires\": [[\"parse-sensor\"]]\n  },\n  {\n    \"id\": \"mqtt-sub-heartbeat\",\n    \"type\": \"mqtt in\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"Device Heartbeats\",\n    \"topic\": \"devices/heartbeat/#\",\n    \"qos\": \"0\",\n    \"broker\": \"mqtt-broker-config\",\n    \"x\": 130,\n    \"y\": 280,\n    \"wires\": [[\"count-heartbeats\"]]\n  },\n  {\n    \"id\": \"parse-sensor\",\n    \"type\": \"function\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"Parse + Tag\",\n    \"func\": \"try {\\n  var d = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload;\\n  d._topic = msg.topic;\\n  d._ts = Date.now();\\n  d._slice = 'mmtc';\\n  msg.payload = d;\\n} catch(e) {\\n  msg.payload = {raw: msg.payload, error: e.message, _ts: Date.now()};\\n}\\nreturn msg;\",\n    \"outputs\": 1,\n    \"x\": 360,\n    \"y\": 160,\n    \"wires\": [[\"influx-write\", \"debug-sensor\"]]\n  },\n  {\n    \"id\": \"count-heartbeats\",\n    \"type\": \"function\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"Track Devices\",\n    \"func\": \"context.set('last_hb_' + msg.topic, Date.now());\\nmsg.payload = {device: msg.topic, ts: Date.now()};\\nreturn msg;\",\n    \"outputs\": 1,\n    \"x\": 360,\n    \"y\": 280,\n    \"wires\": [[\"debug-sensor\"]]\n  },\n  {\n    \"id\": \"influx-write\",\n    \"type\": \"debug\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"Telemetry Store (InfluxDB)\",\n    \"active\": true,\n    \"tosidebar\": true,\n    \"console\": false,\n    \"tostatus\": false,\n    \"complete\": \"payload\",\n    \"x\": 600,\n    \"y\": 160,\n    \"wires\": []\n  },\n  {\n    \"id\": \"debug-sensor\",\n    \"type\": \"debug\",\n    \"z\": \"flow-mmtc-main\",\n    \"name\": \"Sensor Debug\",\n    \"active\": false,\n    \"x\": 600,\n    \"y\": 280,\n    \"wires\": []\n  }\n]\n","settings.js":"module.exports = {\n    uiPort: 1880,\n    flowFile: 'flows.json',\n    userDir: '/data',\n    httpAdminRoot: '/',\n    httpNodeRoot: '/api',\n    logging: { console: { level: \"warn\" } },\n    editorTheme: { page: { title: \"mMTC — IoT Telemetry Processor\" } }\n}\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"mmtc-nodered-config","namespace":"mmtc"}}
+    creationTimestamp: "2026-05-01T08:00:17Z"
+    name: mmtc-nodered-config
+    namespace: mmtc
+    resourceVersion: "2521731"
+    uid: d5ebeb5b-3d38-4693-932e-cd8feb1feaee
+- apiVersion: v1
+  data:
+    mosquitto.conf: |
+      listener 1883 0.0.0.0
+      listener 9001 0.0.0.0
+      protocol websockets
+      allow_anonymous true
+      persistence false
+      log_type error
+      log_type warning
+      log_type information
+      # Enable $SYS topics for monitoring
+      sys_interval 10
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"mosquitto.conf":"listener 1883 0.0.0.0\nlistener 9001 0.0.0.0\nprotocol websockets\nallow_anonymous true\npersistence false\nlog_type error\nlog_type warning\nlog_type information\n# Enable $SYS topics for monitoring\nsys_interval 10\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"mosquitto-config","namespace":"mmtc"}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    name: mosquitto-config
+    namespace: mmtc
+    resourceVersion: "2521723"
+    uid: ffbebf68-1af9-4998-82b4-09c122c39e9b
+- apiVersion: v1
+  data:
+    upf-mmtc.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-mmtc.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.172
+              port: 8807
+        gtpu:
+          server:
+            - address: 192.168.49.173
+              port: 2152
+        session:
+          - subnet: 10.47.0.0/24
+            gateway: 10.47.0.1
+            dev: ogstun-mmtc
+            dnn: iot
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf-mmtc.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-mmtc.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.172\n        port: 8807\n  gtpu:\n    server:\n      - address: 192.168.49.173\n        port: 2152\n  session:\n    - subnet: 10.47.0.0/24\n      gateway: 10.47.0.1\n      dev: ogstun-mmtc\n      dnn: iot\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-mmtc-config","namespace":"mmtc"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-mmtc-config
+    namespace: mmtc
+    resourceVersion: "4332575"
+    uid: e6f16eda-cfc3-4b24-8557-2cb88b59981c
+- apiVersion: v1
+  data:
+    upf-mmtc.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-mmtc-node2.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.183
+              port: 8807
+        gtpu:
+          server:
+            - address: 192.168.49.183
+              port: 2152
+        session:
+          - subnet: 10.47.0.0/24
+            gateway: 10.47.0.1
+            dev: ogstun-mmtc
+            dnn: iot
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf-mmtc.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-mmtc-node2.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.183\n        port: 8807\n  gtpu:\n    server:\n      - address: 192.168.49.183\n        port: 2152\n  session:\n    - subnet: 10.47.0.0/24\n      gateway: 10.47.0.1\n      dev: ogstun-mmtc\n      dnn: iot\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-mmtc-node2-config","namespace":"mmtc"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-mmtc-node2-config
+    namespace: mmtc
+    resourceVersion: "4633"
+    uid: 7e673f78-1e70-4a5c-8faf-bc1435b3e52d
+kind: List
+metadata:
+  resourceVersion: ""

@@ -1,0 +1,401 @@
+---
+# ============================================================
+# Grafana — Datasource Provisioning
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://localhost:30090
+        isDefault: true
+        editable: true
+        uid: PBFA97CFB590B2093
+
+---
+# ============================================================
+# Grafana — Dashboard Provisioning Config
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'default'
+        orgId: 1
+        folder: '5G Slices'
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: false
+
+---
+# ============================================================
+# Grafana — Dashboard JSON
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  slice-monitoring.json: |
+    {
+      "annotations": { "list": [] },
+      "description": "5G Network Slice Monitoring — eMBB / URLLC / mMTC",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "title": "📊 eMBB — Throughput",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 0, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "lineWidth": 2, "fillOpacity": 20, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#73BF69" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RX" }, "properties": [{ "id": "color", "value": { "fixedColor": "#56A64B", "mode": "fixed" } }, { "id": "custom.fillOpacity", "value": 5 }] }
+            ]
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_bytes{slice=\"embb\"}[30s])", "legendFormat": "TX", "refId": "A" },
+            { "expr": "rate(tun_rx_bytes{slice=\"embb\"}[30s])", "legendFormat": "RX", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📊 URLLC — Throughput",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 8, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "lineWidth": 2, "fillOpacity": 20, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#F2CC0C" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RX" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E0B400", "mode": "fixed" } }, { "id": "custom.fillOpacity", "value": 5 }] }
+            ]
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_bytes{slice=\"urllc\"}[30s])", "legendFormat": "TX", "refId": "A" },
+            { "expr": "rate(tun_rx_bytes{slice=\"urllc\"}[30s])", "legendFormat": "RX", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📊 mMTC — Throughput",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "lineWidth": 2, "fillOpacity": 20, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#FF9830" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RX" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E07B24", "mode": "fixed" } }, { "id": "custom.fillOpacity", "value": 5 }] }
+            ]
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_bytes{slice=\"mmtc\"}[30s])", "legendFormat": "TX", "refId": "A" },
+            { "expr": "rate(tun_rx_bytes{slice=\"mmtc\"}[30s])", "legendFormat": "RX", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📦 eMBB — Packet Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 0, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "pps",
+              "custom": { "lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#73BF69" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RX" }, "properties": [{ "id": "color", "value": { "fixedColor": "#56A64B", "mode": "fixed" } }, { "id": "custom.fillOpacity", "value": 5 }] }
+            ]
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_packets{slice=\"embb\"}[30s])", "legendFormat": "TX", "refId": "A" },
+            { "expr": "rate(tun_rx_packets{slice=\"embb\"}[30s])", "legendFormat": "RX", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📦 URLLC — Packet Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 8, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "pps",
+              "custom": { "lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#F2CC0C" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RX" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E0B400", "mode": "fixed" } }, { "id": "custom.fillOpacity", "value": 5 }] }
+            ]
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_packets{slice=\"urllc\"}[30s])", "legendFormat": "TX", "refId": "A" },
+            { "expr": "rate(tun_rx_packets{slice=\"urllc\"}[30s])", "legendFormat": "RX", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📦 mMTC — Packet Rate",
+          "type": "timeseries",
+          "gridPos": { "h": 7, "w": 8, "x": 16, "y": 7 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "pps",
+              "custom": { "lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#FF9830" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "RX" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E07B24", "mode": "fixed" } }, { "id": "custom.fillOpacity", "value": 5 }] }
+            ]
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_packets{slice=\"mmtc\"}[30s])", "legendFormat": "TX", "refId": "A" },
+            { "expr": "rate(tun_rx_packets{slice=\"mmtc\"}[30s])", "legendFormat": "RX", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "🔢 Total Traffic (Cumulative)",
+          "type": "stat",
+          "gridPos": { "h": 5, "w": 12, "x": 0, "y": 14 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "decbytes",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 1048576 },
+                  { "color": "red", "value": 104857600 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "area",
+            "textMode": "auto"
+          },
+          "targets": [
+            { "expr": "tun_tx_bytes{slice=\"embb\"} + tun_rx_bytes{slice=\"embb\"}", "legendFormat": "eMBB Total", "refId": "A" },
+            { "expr": "tun_tx_bytes{slice=\"urllc\"} + tun_rx_bytes{slice=\"urllc\"}", "legendFormat": "URLLC Total", "refId": "B" },
+            { "expr": "tun_tx_bytes{slice=\"mmtc\"} + tun_rx_bytes{slice=\"mmtc\"}", "legendFormat": "mMTC Total", "refId": "C" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "⚡ Live Bandwidth per Slice",
+          "type": "gauge",
+          "gridPos": { "h": 5, "w": 12, "x": 12, "y": 14 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "min": 0,
+              "max": 13107200,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 5242880 },
+                  { "color": "red", "value": 10485760 }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"] },
+            "showThresholdLabels": false,
+            "showThresholdMarkers": true
+          },
+          "targets": [
+            { "expr": "rate(tun_tx_bytes{slice=\"embb\"}[30s]) + rate(tun_rx_bytes{slice=\"embb\"}[30s])", "legendFormat": "eMBB", "refId": "A" },
+            { "expr": "rate(tun_tx_bytes{slice=\"urllc\"}[30s]) + rate(tun_rx_bytes{slice=\"urllc\"}[30s])", "legendFormat": "URLLC", "refId": "B" },
+            { "expr": "rate(tun_tx_bytes{slice=\"mmtc\"}[30s]) + rate(tun_rx_bytes{slice=\"mmtc\"}[30s])", "legendFormat": "mMTC", "refId": "C" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "🚨 Errors & Drops",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 24, "x": 0, "y": 19 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": { "lineWidth": 2, "fillOpacity": 20, "showPoints": "never" },
+              "color": { "mode": "palette-classic" }
+            },
+            "overrides": []
+          },
+          "targets": [
+            { "expr": "rate(tun_rx_errors{slice=~".+"}[30s])", "legendFormat": "{{slice}} RX Errors", "refId": "A" },
+            { "expr": "rate(tun_tx_errors{slice=~".+"}[30s])", "legendFormat": "{{slice}} TX Errors", "refId": "B" },
+            { "expr": "rate(tun_rx_dropped{slice=~".+"}[30s])", "legendFormat": "{{slice}} RX Drops", "refId": "C" },
+            { "expr": "rate(tun_tx_dropped{slice=~".+"}[30s])", "legendFormat": "{{slice}} TX Drops", "refId": "D" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        }
+      ],
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "tags": ["5g", "slicing", "upf", "network"],
+      "templating": { "list": [] },
+      "time": { "from": "now-15m", "to": "now" },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "5G Network Slice Monitor",
+      "uid": "slice-monitor-v1",
+      "version": 2
+    }
+
+---
+# ============================================================
+# Grafana — Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: kubemaster
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          effect: NoSchedule
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.4.1
+          ports:
+            - containerPort: 3000
+              name: web
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: "admin"
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: "admin"
+            - name: GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH
+              value: "/var/lib/grafana/dashboards/slice-monitoring.json"
+          volumeMounts:
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboards
+              mountPath: /var/lib/grafana/dashboards/slice-monitoring.json
+              subPath: slice-monitoring.json
+            - name: orchestrator-dashboard
+              mountPath: /var/lib/grafana/dashboards/qos-orchestrator.json
+              subPath: qos-orchestrator.json
+            - name: hierarchical-dashboard
+              mountPath: /var/lib/grafana/dashboards/hierarchical-qos.json
+              subPath: hierarchical-qos.json
+            - name: app-dashboard
+              mountPath: /var/lib/grafana/dashboards/slice-apps.json
+              subPath: slice-apps.json
+            - name: data
+              mountPath: /var/lib/grafana
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 5
+      volumes:
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-provider
+          configMap:
+            name: grafana-dashboard-provider
+        - name: dashboards
+          configMap:
+            name: grafana-dashboards
+        - name: orchestrator-dashboard
+          configMap:
+            name: grafana-orchestrator-dashboard
+        - name: hierarchical-dashboard
+          configMap:
+            name: grafana-hierarchical-dashboard
+        - name: app-dashboard
+          configMap:
+            name: grafana-app-dashboard
+        - name: data
+          emptyDir: {}
+
+---
+# ============================================================
+# Grafana — Service (NodePort for browser access)
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  type: NodePort
+  selector:
+    app: grafana
+  ports:
+    - name: web
+      port: 3000
+      targetPort: 3000
+      nodePort: 30300

@@ -1,0 +1,342 @@
+%% ch4_implementation.tex — Trimmed Implementation Chapter with Diagrams
+
+\chapter{IMPLEMENTATION}
+
+This chapter documents the realisation of the testbed from physical infrastructure
+through to orchestrator deployment and experimental campaign setup. The agentic
+reasoning architecture and individual agent designs are detailed in
+Chapters~3 and~5 respectively; this chapter focuses on how those components
+were physically instantiated, integrated, and operated.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Physical Testbed Infrastructure}
+
+The testbed spans five Linux virtual machines connected over a private NAT network
+with static IP assignments. Table~\ref{tab:infrastructure} summarises each node.
+
+\begin{table}[H]
+\centering
+\caption{Testbed Infrastructure Inventory}
+\label{tab:infrastructure}
+\begin{tabular}{p{2.6cm}p{3.4cm}p{3.0cm}p{2.8cm}}
+\toprule
+\textbf{Node} & \textbf{Role} & \textbf{Resources} & \textbf{OS} \\
+\midrule
+\texttt{kubemaster} & K8s control plane; orchestrator host & 4\,vCPU, 8\,GB RAM & Ubuntu 22.04 \\
+\texttt{kube}       & K8s worker; UPF pod host             & 4\,vCPU, 8\,GB RAM & Ubuntu 22.04 \\
+\texttt{core VM}    & Open5GS 5G Standalone core           & 2\,vCPU, 4\,GB RAM & Ubuntu 22.04 \\
+\texttt{UERANSIM}   & gNB and UE emulation                 & 2\,vCPU, 4\,GB RAM & Ubuntu 22.04 \\
+\texttt{MEC VM}     & Edge application and traffic sink    & 2\,vCPU, 4\,GB RAM & Ubuntu 22.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Flannel CNI plugin provides intra-cluster pod networking.
+UPF pods run in host-network mode to access the physical GTP-U interface directly.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{5G Core and Slice Configuration}
+
+The 5G Standalone core runs Open5GS with three dedicated SMF instances, one per
+slice, each bound to a distinct UPF and non-overlapping IP pool.
+Table~\ref{tab:slice_config} shows the complete slice-to-function mapping.
+
+\begin{table}[H]
+\centering
+\caption{Slice Configuration: S-NSSAI to SMF and UPF Mapping}
+\label{tab:slice_config}
+\begin{tabular}{lllll}
+\toprule
+\textbf{Slice} & \textbf{S-NSSAI} & \textbf{DNN} & \textbf{UPF Subnet} & \textbf{SMF Service} \\
+\midrule
+eMBB  & SST=1, SD=0x000001 & \texttt{embb}  & 10.45.0.0/16 & \texttt{smfd-embb}  \\
+URLLC & SST=2, SD=0x000002 & \texttt{urllc} & 10.46.0.0/16 & \texttt{smfd-urllc} \\
+mMTC  & SST=3, SD=0x000003 & \texttt{mmtc}  & 10.47.0.0/16 & \texttt{smfd-mmtc}  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The AMF YAML registers PLMN MCC=999, MNC=70 and binds the NGAP interface on SCTP
+port 38412. Subscriber records in the UDM MongoDB store per-IMSI S-NSSAI entries,
+enabling the NSSF to resolve slice selection at registration time.
+
+Nine UE instances are emulated via UERANSIM, each establishing three concurrent
+PDU sessions (one per slice), resulting in three \texttt{uesimtun} tunnel
+interfaces per UE. Traffic generators bind to the correct interface, ensuring
+packets enter the intended GTP-U tunnel without cross-slice leakage.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{User-Plane Isolation via HTB Traffic Shaping}
+
+Per-slice bandwidth isolation is enforced at the UPF egress interface
+(\texttt{ens33}) using Linux Traffic Control with a Hierarchical Token Bucket
+(HTB) scheduler. Figure~\ref{fig:htb_tree} illustrates the class hierarchy.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=1.0cm and 1.8cm,
+  box/.style={draw, rounded corners=3pt, minimum width=3.0cm,
+              minimum height=0.7cm, align=center, font=\small},
+  root/.style={box, fill=gray!15, thick},
+  embb/.style={box, fill=blue!12, draw=blue!70!black},
+  urllc/.style={box, fill=red!12, draw=red!70!black},
+  mmtc/.style={box, fill=green!12, draw=green!60!black},
+  arr/.style={-Latex, thick}
+]
+\node[root] (root) {\texttt{1:0} root HTB \\ \small 1000\,Mbit/s};
+\node[root, below=1.2cm of root] (parent) {\texttt{1:1} parent class \\ \small rate=1000 ceil=1000};
+
+\node[embb,  below left=1.4cm and 2.4cm of parent] (embb)
+    {\texttt{1:10} eMBB \\ \small rate=1000 ceil=1000};
+\node[urllc, below=1.4cm of parent] (urllc)
+    {\texttt{1:20} URLLC \\ \small rate=50 ceil=200 \\ \textbf{prio\,1}};
+\node[mmtc,  below right=1.4cm and 2.4cm of parent] (mmtc)
+    {\texttt{1:30} mMTC \\ \small rate=10 ceil=50};
+
+\draw[arr] (root)   -- (parent);
+\draw[arr] (parent) -- (embb);
+\draw[arr] (parent) -- (urllc);
+\draw[arr] (parent) -- (mmtc);
+
+% Filter labels
+\node[font=\scriptsize, text=cembb,  below=0.15cm of embb]  {dst 10.45.0.0/16};
+\node[font=\scriptsize, text=curllc, below=0.15cm of urllc] {dst 10.46.0.0/16};
+\node[font=\scriptsize, text=cmmtc,  below=0.15cm of mmtc]  {dst 10.47.0.0/16};
+\end{tikzpicture}
+\caption{HTB shaping hierarchy on the UPF egress interface. URLLC carries
+\texttt{prio~1} (strict priority), ensuring URLLC packets skip the queue
+whenever aggregate utilisation approaches the physical ceiling.}
+\label{fig:htb_tree}
+\end{figure}
+
+Packets are classified into HTB classes via U32 filters that match the
+destination IP subnet of each slice's UPF address pool. The orchestrator
+modifies the eMBB rate at runtime using \texttt{tc class change} over SSH;
+the command takes effect within one kernel scheduling cycle
+($<$1\,ms enforcement latency).
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{QoS Monitoring}
+
+A dedicated monitoring thread collects per-slice telemetry every 3\,s,
+independent of the LLM inference loop. Table~\ref{tab:metrics} summarises the
+metrics collected and their measurement method.
+
+\begin{table}[H]
+\centering
+\caption{Per-Slice Metrics Collected at Each Monitoring Cycle}
+\label{tab:metrics}
+\begin{tabular}{p{2.8cm}p{4.2cm}p{5.8cm}}
+\toprule
+\textbf{Metric} & \textbf{Source} & \textbf{Purpose} \\
+\midrule
+URLLC p99 RTT & ICMP echo via \texttt{uesimtun1} & Primary SLA indicator; fed to Planning Agent \\
+RTT slope     & Linear regression over rolling window & Trend input for C3 Chain-of-Thought reasoning \\
+eMBB load fraction & TX byte delta / current rate limit & Root-cause indicator for C4 WLA decision \\
+eMBB throughput & \texttt{uesimtun0} byte counter delta & Reported in dataset; plotted in results \\
+mMTC PDR      & MQTT TX vs RX message count & Alert if delivery ratio $<$ 99.5\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All metrics are exported in Prometheus text format on port 9200 and visualised
+via Grafana dashboards, providing a real-time audit trail throughout the campaign.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Orchestrator Control Loop}
+
+Figure~\ref{fig:control_loop} shows the closed-loop execution flow shared by
+both the rule-based and agentic orchestrators. The two systems differ only in
+the \textit{Decide} stage.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  node distance=0.6cm and 0.5cm,
+  stage/.style={draw, rounded corners=4pt, minimum width=2.5cm,
+                minimum height=0.8cm, align=center, font=\small, thick},
+  obs/.style={stage, fill=gray!12},
+  think/.style={stage, fill=blue!8, draw=blue!60!black},
+  validate/.style={stage, fill=yellow!20, draw=yellow!60!black},
+  act/.style={stage, fill=green!12, draw=green!60!black},
+  reflect/.style={stage, fill=cyan!12, draw=cyan!60!black},
+  arr/.style={-Latex, thick},
+  lab/.style={font=\scriptsize, midway, above=1pt}
+]
+\node[obs]      (obs)      {Observe \\ \scriptsize Monitoring Agent};
+\node[think,    right=1.3cm of obs]   (think)   {Think \\ \scriptsize Planning Agent};
+\node[validate, right=1.3cm of think] (val)     {Validate \\ \scriptsize Gate};
+\node[act,      right=1.3cm of val]   (act)     {Act \\ \scriptsize Execution Agent};
+\node[reflect,  below=1.1cm of think]  (reflect) {Reflect \\ \scriptsize Memory Agent};
+
+\draw[arr] (obs)   -- node[lab]{state}      (think);
+\draw[arr] (think) -- node[lab]{decision}   (val);
+\draw[arr] (val)   -- node[lab]{action}     (act);
+\draw[arr] (act)   -- ++(0,-1.45) -| node[near start, below, font=\scriptsize]{outcome} (reflect);
+\draw[arr] (reflect) -- node[lab, left, rotate=90, yshift=4pt]{\scriptsize memory} (think);
+\draw[arr] (obs)  -- ++(0,-1.1) node[below left, font=\scriptsize]{$\Delta t = 3\,s$} -- ++(0,-0.3);
+
+% Rule-based annotation
+\node[font=\scriptsize, draw=gray!60!black, rounded corners=2pt, fill=gray!8,
+      below=0.2cm of val, xshift=1.0cm]
+      (rb) {\textit{Rule-based}: fixed $\theta$};
+\node[font=\scriptsize, draw=blue!60!black, rounded corners=2pt, fill=blue!6,
+      below=0.6cm of val, xshift=1.0cm]
+      (ag) {\textit{Agentic}: LLM + CoT + WLA};
+\end{tikzpicture}
+\caption{Closed-loop orchestrator control flow. Both orchestrator types share the
+Observe–Validate–Act–Reflect structure. The agentic system additionally invokes
+the Memory Agent and produces a Chain-of-Thought reasoning trace.}
+\label{fig:control_loop}
+\end{figure}
+
+In the rule-based system, the \textit{Think} stage is a binary threshold
+comparison: if URLLC p99 RTT $>$ 20\,ms, throttle eMBB to 50\,Mbit/s;
+otherwise restore to 1000\,Mbit/s. There is no root-cause analysis, memory, or
+wrong-lever check. In the agentic system, the same stage invokes the local
+\texttt{llama3.2:3b} model via Ollama, passes the enriched state including
+memory context, and enforces the Chain-of-Thought schema and WLA gate before
+forwarding a decision to the Execution Agent.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Dataset Collection}
+
+At each 3-second monitoring cycle, both orchestrators write a complete record to a
+CSV log file partitioned by orchestrator type and load level.
+Figure~\ref{fig:dataset_schema} illustrates the column structure of the collected
+dataset.
+
+\begin{figure}[H]
+\centering
+\begin{tcolorbox}[
+  colback=gray!6, colframe=gray!40,
+  title={\small\texttt{dataset\_agentic\_medium.csv} — Column Schema (6 datasets total)},
+  fontupper=\ttfamily\scriptsize,
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+]
+\begin{tabular}{@{}ll@{\hspace{1.5cm}}ll@{}}
+\multicolumn{2}{l}{\textbf{Network State}} & \multicolumn{2}{l}{\textbf{Agentic Reasoning}} \\
+\texttt{urllc\_rtt\_ms}      & URLLC p99 RTT       & \texttt{root\_cause\_assessment} & CoT text field \\
+\texttt{urllc\_rtt\_max\_ms} & URLLC max RTT       & \texttt{reasoning\_category}     & Classification \\
+\texttt{embb\_mbps}          & Observed throughput & \texttt{lever\_validity\_score}  & WLA score (C4) \\
+\texttt{embb\_rate\_mbit}    & Active tc rate      & \texttt{wla\_activated}          & WLA flag (C4)  \\
+\texttt{mmtc\_msgs}          & mMTC message count  & \texttt{memory\_retrieval\_count}& Memory (C5) \\
+\texttt{sla\_violated}       & SLA breach flag     & \texttt{memory\_reinforced}      & Reinforced (C5)\\
+\texttt{orchestrator\_state} & Throttle/Normal     & \texttt{memory\_overridden}      & Override (C5) \\[4pt]
+\multicolumn{2}{l}{\textbf{Decision}} & \multicolumn{2}{l}{\textbf{System}} \\
+\texttt{action\_taken}       & Applied action      & \texttt{decision\_latency\_ms}   & LLM round-trip \\
+\texttt{confidence}          & LLM confidence      & \texttt{tokens\_used}            & Token count \\
+\texttt{candidate\_action}   & Pre-WLA action      & \texttt{node\_cpu\_percent}      & Host CPU load \\
+\end{tabular}
+\end{tcolorbox}
+\caption{Column schema of the six collected datasets
+(rule-based $\times$ \{low, medium, high\} and agentic $\times$ \{low, medium, high\}).
+Each row is one 3-second control cycle. The agentic-specific columns
+(\texttt{root\_cause\_assessment}, \texttt{lever\_validity\_score},
+\texttt{wla\_activated}, \texttt{memory\_*}) are populated only in agentic runs;
+rule-based runs carry equivalent synthetic labels for paired comparison.}
+\label{fig:dataset_schema}
+\end{figure}
+
+Six CSV files are produced in total: one per combination of orchestrator type
+(rule-based, agentic) and traffic load level (low, medium, high).
+Each file contains approximately 9{,}000 rows, corresponding to a 7.5-hour
+equivalent observation window per condition at the 3-second interval.
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Experimental Campaign Design}
+
+The evaluation follows a $2 \times 3 \times 3$ factorial design:
+2 orchestrator types $\times$ 3 load levels $\times$ 3 repeated trials,
+yielding 18 total experimental runs. Figure~\ref{fig:exp_matrix} depicts
+the campaign matrix.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  cell/.style={draw, minimum width=2.6cm, minimum height=0.75cm,
+               align=center, font=\small},
+  hdr/.style={cell, fill=gray!20, font=\small\bfseries},
+  rb/.style={cell, fill=gray!8},
+  ag/.style={cell, fill=blue!8, draw=blue!50!black}
+]
+% Headers
+\node[hdr] (h0) at (0,0) {};
+\node[hdr] (h1) at (2.7,0) {Low Load};
+\node[hdr] (h2) at (5.4,0) {Medium Load};
+\node[hdr] (h3) at (8.1,0) {High Load};
+% Rule-based row
+\node[hdr] (r1) at (0,-0.85)   {Rule-Based};
+\node[rb]  at (2.7,-0.85)  {3 trials};
+\node[rb]  at (5.4,-0.85)  {3 trials};
+\node[rb]  at (8.1,-0.85)  {3 trials};
+% Agentic row
+\node[hdr] (r2) at (0,-1.70)  {Agentic};
+\node[ag]  at (2.7,-1.70) {3 trials};
+\node[ag]  at (5.4,-1.70) {3 trials};
+\node[ag]  at (8.1,-1.70) {3 trials};
+% Total
+\node[font=\small\bfseries, right=0.4cm of h3] {$= 18$ runs};
+\end{tikzpicture}
+\caption{Experimental campaign matrix: 2 orchestrators $\times$ 3 traffic
+load levels $\times$ 3 repeated trials = 18 total runs.}
+\label{fig:exp_matrix}
+\end{figure}
+
+\noindent
+Traffic load levels are defined as follows:
+
+\begin{itemize}[noitemsep, topsep=4pt]
+  \item \textbf{Low}: 360p HLS video (eMBB), 1\,Hz MQTT (mMTC), 1\,Hz ICMP (URLLC).
+  \item \textbf{Medium}: 720p video, 2× MQTT publishers at 2\,Hz, 2\,Hz ICMP.
+        Creates moderate inter-slice contention.
+  \item \textbf{High}: 1080p video, 4× MQTT publishers at 4\,Hz, 4\,Hz ICMP.
+        Generates sustained congestion reliably triggering SLA violations.
+\end{itemize}
+
+Table~\ref{tab:exp_params} lists the fixed parameters shared across all runs.
+
+\begin{table}[H]
+\centering
+\caption{Experimental Parameters}
+\label{tab:exp_params}
+\begin{tabular}{ll}
+\toprule
+\textbf{Parameter} & \textbf{Value} \\
+\midrule
+URLLC SLA Threshold              & 20\,ms \\
+Monitoring Interval ($\Delta t$) & 3\,s \\
+eMBB Rate Bounds                 & 50 -- 1000\,Mbit/s \\
+LLM Model                        & \texttt{llama3.2:3b} (Ollama, local CPU) \\
+LLM Temperature                  & 0.2 \\
+Memory Window                    & 10 decision records \\
+Trials per Condition             & 3 \\
+Total Experimental Runs          & 18 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%% ─────────────────────────────────────────────────────────────────────────────
+\section{Testbed Automation}
+
+An automated shell script (\texttt{mec\_restart.sh}) restores the environment
+to a known good state before each trial in five sequential phases:
+
+\begin{enumerate}[noitemsep, topsep=4pt]
+  \item \textbf{UPF Purge}: Force-delete UPF pods; wait for Kubernetes to
+        respawn all three into \texttt{Running} state.
+  \item \textbf{Core Restart}: SSH restart of AMF and all three SMF services;
+        verify SCTP port 38412 binding.
+  \item \textbf{RAN/UE Init}: Kill stale UERANSIM processes, delete residual
+        tunnel interfaces, launch gNB and 9 UE instances, await PDU session
+        establishment on all three slices.
+  \item \textbf{Traffic Start}: Launch HLS, HTTP telemetry, and MQTT generators
+        on their respective \texttt{uesimtun} interfaces.
+  \item \textbf{Orchestrator Hook}: Start the Python orchestrator daemon; verify
+        Prometheus exposure on port 9200.
+\end{enumerate}
+
+This procedure reduces environment setup from $\approx$25 minutes of manual
+intervention to under 3 minutes of unattended execution, guaranteeing an
+identical initial state for every trial.

@@ -1,0 +1,256 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-app-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "true"
+data:
+  slice-apps.json: |
+    {
+      "description": "5G MEC NOC — Real Application Contention, QoS Degradation & Recovery",
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+
+        {"type":"row","title":"▶ SLICE SLA STATUS","gridPos":{"h":1,"w":24,"x":0,"y":0},"collapsed":false},
+
+        {"title":"eMBB","type":"stat","gridPos":{"h":4,"w":4,"x":0,"y":1},
+         "options":{"colorMode":"background","graphMode":"area","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"unit":"Bps","displayName":"eMBB Throughput","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"red","value":null},{"color":"yellow","value":1000000},{"color":"#5794F2","value":5000000}]}}},
+         "targets":[{"expr":"rate(tun_rx_bytes{slice=\"embb\"}[30s])","legendFormat":"eMBB","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"URLLC RTT","type":"stat","gridPos":{"h":4,"w":4,"x":4,"y":1},
+         "options":{"colorMode":"background","graphMode":"area","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"unit":"ms","displayName":"URLLC RTT","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"#73BF69","value":null},{"color":"yellow","value":12},{"color":"#FF6B6B","value":15}]}}},
+         "targets":[{"expr":"orchestrator_urllc_rtt_ms","legendFormat":"RTT","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"mMTC","type":"stat","gridPos":{"h":4,"w":4,"x":8,"y":1},
+         "options":{"colorMode":"background","graphMode":"area","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"unit":"Bps","displayName":"mMTC Throughput","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"red","value":null},{"color":"yellow","value":100},{"color":"#73BF69","value":1000}]}}},
+         "targets":[{"expr":"rate(tun_rx_bytes{slice=\"mmtc\"}[30s])","legendFormat":"mMTC","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Orchestrator State","type":"stat","gridPos":{"h":4,"w":4,"x":12,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{"0":{"text":"NORMAL","color":"green"},"1":{"text":"THROTTLING","color":"red"}}}]}},
+         "targets":[{"expr":"orchestrator_state","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"SLA Violations","type":"stat","gridPos":{"h":4,"w":4,"x":16,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"displayName":"Active Violations","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":3}]}}},
+         "targets":[{"expr":"orchestrator_violation_count","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"UPF Packet Drops","type":"stat","gridPos":{"h":4,"w":4,"x":20,"y":1},
+         "options":{"colorMode":"background","graphMode":"area","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"unit":"pps","displayName":"Drop Rate","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":10}]}}},
+         "targets":[{"expr":"sum(rate(tun_rx_dropped[30s]) + rate(tun_tx_dropped[30s]))","legendFormat":"Drops","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ CROSS-SLICE CONTENTION STORY","gridPos":{"h":1,"w":24,"x":0,"y":5},"collapsed":false},
+
+        {"title":"eMBB Throughput vs URLLC RTT — Natural Contention Correlation",
+         "description":"Watch URLLC RTT (red, right axis) spike as eMBB throughput (blue, left axis) grows. The orchestrator state (orange step) shows THROTTLED periods.",
+         "type":"timeseries","gridPos":{"h":10,"w":24,"x":0,"y":6},
+         "fieldConfig":{"defaults":{"custom":{"lineWidth":2,"fillOpacity":8,"gradientMode":"none","showPoints":"never"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"eMBB Throughput (Mbps)"},"properties":[
+               {"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}},
+               {"id":"unit","value":"Mbits"},
+               {"id":"custom.axisPlacement","value":"left"},
+               {"id":"custom.fillOpacity","value":12}]},
+             {"matcher":{"id":"byName","options":"URLLC RTT (ms)"},"properties":[
+               {"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}},
+               {"id":"unit","value":"ms"},
+               {"id":"custom.axisPlacement","value":"right"},
+               {"id":"custom.lineWidth","value":3}]},
+             {"matcher":{"id":"byName","options":"SLA Limit (ms)"},"properties":[
+               {"id":"color","value":{"fixedColor":"rgba(255,100,100,0.4)","mode":"fixed"}},
+               {"id":"unit","value":"ms"},
+               {"id":"custom.axisPlacement","value":"right"},
+               {"id":"custom.lineStyle","value":{"fill":"dash","dash":[8,4]}},
+               {"id":"custom.lineWidth","value":1},
+               {"id":"custom.fillOpacity","value":0}]},
+             {"matcher":{"id":"byName","options":"Orchestrator State"},"properties":[
+               {"id":"color","value":{"fixedColor":"#FF9830","mode":"fixed"}},
+               {"id":"unit","value":"short"},
+               {"id":"custom.axisPlacement","value":"hidden"},
+               {"id":"custom.fillOpacity","value":30},
+               {"id":"custom.lineWidth","value":0},
+               {"id":"custom.drawStyle","value":"bars"}]}
+           ]},
+         "targets":[
+           {"expr":"orchestrator_embb_mbps","legendFormat":"eMBB Throughput (Mbps)","refId":"A"},
+           {"expr":"orchestrator_urllc_rtt_ms","legendFormat":"URLLC RTT (ms)","refId":"B"},
+           {"expr":"vector(15)","legendFormat":"SLA Limit (ms)","refId":"C"},
+           {"expr":"orchestrator_state * 20","legendFormat":"Orchestrator State","refId":"D"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ eMBB — VIDEO STREAMING QoE","gridPos":{"h":1,"w":24,"x":0,"y":16},"collapsed":false},
+
+        {"title":"eMBB UPF RX Throughput","type":"timeseries","gridPos":{"h":7,"w":12,"x":0,"y":17},
+         "fieldConfig":{"defaults":{"unit":"Bps","custom":{"lineWidth":2,"fillOpacity":25,"gradientMode":"scheme","showPoints":"never"},
+           "color":{"fixedColor":"#5794F2","mode":"fixed"}}},
+         "targets":[{"expr":"rate(tun_rx_bytes{slice=\"embb\"}[30s])","legendFormat":"eMBB RX","refId":"A"},
+                    {"expr":"rate(tun_tx_bytes{slice=\"embb\"}[30s])","legendFormat":"eMBB TX","refId":"B"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"eMBB tc Queue Backlog","type":"timeseries","gridPos":{"h":7,"w":6,"x":12,"y":17},
+         "fieldConfig":{"defaults":{"unit":"pkt","custom":{"lineWidth":2,"fillOpacity":20,"gradientMode":"scheme"},
+           "color":{"fixedColor":"#5794F2","mode":"fixed"}}},
+         "targets":[{"expr":"tc_qdisc_backlog_packets{slice=\"embb\"}","legendFormat":"Backlog","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"eMBB Drop Rate","type":"timeseries","gridPos":{"h":7,"w":6,"x":18,"y":17},
+         "fieldConfig":{"defaults":{"unit":"pps","custom":{"lineWidth":2,"fillOpacity":15,"gradientMode":"scheme"},
+           "color":{"fixedColor":"#5794F2","mode":"fixed"}}},
+         "targets":[{"expr":"rate(tun_rx_dropped{slice=\"embb\"}[30s]) + rate(tun_tx_dropped{slice=\"embb\"}[30s])","legendFormat":"Drops","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ URLLC — INDUSTRIAL CONTROL QoS","gridPos":{"h":1,"w":24,"x":0,"y":24},"collapsed":false},
+
+        {"title":"URLLC End-to-End RTT vs SLA Threshold",
+         "description":"RTT measured from industrial control clients via Node-RED. SLA = 15ms. Shaded red zone indicates SLA breach territory.",
+         "type":"timeseries","gridPos":{"h":8,"w":12,"x":0,"y":25},
+         "fieldConfig":{"defaults":{"unit":"ms",
+           "custom":{"lineWidth":3,"fillOpacity":15,"gradientMode":"scheme","showPoints":"never",
+             "thresholdsStyle":{"mode":"line+area"}},
+           "color":{"fixedColor":"#FF6B6B","mode":"fixed"},
+           "thresholds":{"steps":[{"color":"transparent","value":null},{"color":"rgba(255,50,50,0.15)","value":15}]}},
+           "overrides":[{"matcher":{"id":"byName","options":"SLA Limit"},"properties":[
+             {"id":"color","value":{"fixedColor":"rgba(255,100,100,0.6)","mode":"fixed"}},
+             {"id":"custom.lineWidth","value":1},{"id":"custom.lineStyle","value":{"fill":"dash","dash":[8,4]}},
+             {"id":"custom.fillOpacity","value":0}]}]},
+         "targets":[
+           {"expr":"orchestrator_urllc_rtt_ms","legendFormat":"URLLC RTT","refId":"A"},
+           {"expr":"vector(15)","legendFormat":"SLA Limit","refId":"B"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"URLLC UPF Throughput","type":"timeseries","gridPos":{"h":8,"w":6,"x":12,"y":25},
+         "fieldConfig":{"defaults":{"unit":"Bps","custom":{"lineWidth":2,"fillOpacity":15,"gradientMode":"scheme"},
+           "color":{"fixedColor":"#FF6B6B","mode":"fixed"}}},
+         "targets":[{"expr":"rate(tun_rx_bytes{slice=\"urllc\"}[30s])","legendFormat":"URLLC RX","refId":"A"},
+                    {"expr":"rate(tun_tx_bytes{slice=\"urllc\"}[30s])","legendFormat":"URLLC TX","refId":"B"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"URLLC Queue Backlog + Drops","type":"timeseries","gridPos":{"h":8,"w":6,"x":18,"y":25},
+         "fieldConfig":{"defaults":{"custom":{"lineWidth":2,"fillOpacity":15,"gradientMode":"scheme"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"Backlog (pkts)"},"properties":[
+               {"id":"unit","value":"pkt"},{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"Drop Rate"},"properties":[
+               {"id":"unit","value":"pps"},{"id":"color","value":{"fixedColor":"#FA6400","mode":"fixed"}}]}]},
+         "targets":[
+           {"expr":"tc_qdisc_backlog_packets{slice=\"urllc\"}","legendFormat":"Backlog (pkts)","refId":"A"},
+           {"expr":"rate(tun_rx_dropped{slice=\"urllc\"}[30s]) + rate(tun_tx_dropped{slice=\"urllc\"}[30s])","legendFormat":"Drop Rate","refId":"B"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ mMTC — IoT SENSOR TELEMETRY","gridPos":{"h":1,"w":24,"x":0,"y":33},"collapsed":false},
+
+        {"title":"mMTC MQTT Throughput","type":"timeseries","gridPos":{"h":7,"w":12,"x":0,"y":34},
+         "fieldConfig":{"defaults":{"unit":"Bps","custom":{"lineWidth":2,"fillOpacity":20,"gradientMode":"scheme"},
+           "color":{"fixedColor":"#73BF69","mode":"fixed"}}},
+         "targets":[{"expr":"rate(tun_rx_bytes{slice=\"mmtc\"}[30s])","legendFormat":"mMTC RX","refId":"A"},
+                    {"expr":"rate(tun_tx_bytes{slice=\"mmtc\"}[30s])","legendFormat":"mMTC TX","refId":"B"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"mMTC Message Count + Drops","type":"timeseries","gridPos":{"h":7,"w":6,"x":12,"y":34},
+         "fieldConfig":{"defaults":{"custom":{"lineWidth":2,"fillOpacity":15}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"Total MQTT Msgs"},"properties":[
+               {"id":"unit","value":"short"},{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"Drop Rate"},"properties":[
+               {"id":"unit","value":"pps"},{"id":"color","value":{"fixedColor":"#FA6400","mode":"fixed"}}]}]},
+         "targets":[
+           {"expr":"orchestrator_mmtc_msgs_total","legendFormat":"Total MQTT Msgs","refId":"A"},
+           {"expr":"rate(tun_rx_dropped{slice=\"mmtc\"}[30s]) + rate(tun_tx_dropped{slice=\"mmtc\"}[30s])","legendFormat":"Drop Rate","refId":"B"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"mMTC Queue Backlog","type":"timeseries","gridPos":{"h":7,"w":6,"x":18,"y":34},
+         "fieldConfig":{"defaults":{"unit":"pkt","custom":{"lineWidth":2,"fillOpacity":15,"gradientMode":"scheme"},
+           "color":{"fixedColor":"#73BF69","mode":"fixed"}}},
+         "targets":[{"expr":"tc_qdisc_backlog_packets{slice=\"mmtc\"}","legendFormat":"Queue Depth","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ tc QoS ENFORCEMENT","gridPos":{"h":1,"w":24,"x":0,"y":41},"collapsed":false},
+
+        {"title":"eMBB tc Rate Cap — Throttle & Restore (staircase)","type":"timeseries","gridPos":{"h":7,"w":8,"x":0,"y":42},
+         "fieldConfig":{"defaults":{"unit":"Mbits","min":0,"custom":{"lineWidth":3,"fillOpacity":20,"gradientMode":"none",
+           "showPoints":"always","pointSize":5,"staircase":true},
+           "color":{"fixedColor":"#FF9830","mode":"fixed"}}},
+         "targets":[{"expr":"orchestrator_embb_rate_mbit","legendFormat":"eMBB Rate Cap","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"tc Queue Backlog — All Slices","type":"timeseries","gridPos":{"h":7,"w":8,"x":8,"y":42},
+         "fieldConfig":{"defaults":{"unit":"pkt","custom":{"lineWidth":2,"fillOpacity":10,"gradientMode":"scheme","showPoints":"never"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"eMBB"},"properties":[{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"URLLC"},"properties":[{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"mMTC"},"properties":[{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]}]},
+         "targets":[
+           {"expr":"tc_qdisc_backlog_packets{slice=\"embb\"}","legendFormat":"eMBB","refId":"A"},
+           {"expr":"tc_qdisc_backlog_packets{slice=\"urllc\"}","legendFormat":"URLLC","refId":"B"},
+           {"expr":"tc_qdisc_backlog_packets{slice=\"mmtc\"}","legendFormat":"mMTC","refId":"C"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"tc Drop Rate — All Slices","type":"timeseries","gridPos":{"h":7,"w":8,"x":16,"y":42},
+         "fieldConfig":{"defaults":{"unit":"pps","custom":{"lineWidth":2,"fillOpacity":10,"gradientMode":"scheme"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"eMBB"},"properties":[{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"URLLC"},"properties":[{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"mMTC"},"properties":[{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]}]},
+         "targets":[
+           {"expr":"rate(tc_qdisc_dropped{slice=\"embb\"}[30s])","legendFormat":"eMBB","refId":"A"},
+           {"expr":"rate(tc_qdisc_dropped{slice=\"urllc\"}[30s])","legendFormat":"URLLC","refId":"B"},
+           {"expr":"rate(tc_qdisc_dropped{slice=\"mmtc\"}[30s])","legendFormat":"mMTC","refId":"C"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ KUBERNETES RESOURCES","gridPos":{"h":1,"w":24,"x":0,"y":49},"collapsed":false},
+
+        {"title":"CPU Usage per Slice Namespace","type":"timeseries","gridPos":{"h":7,"w":12,"x":0,"y":50},
+         "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2,"fillOpacity":15,"gradientMode":"scheme","showPoints":"never"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"embb"},"properties":[{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"urllc"},"properties":[{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"mmtc"},"properties":[{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]}]},
+         "targets":[{"expr":"sum by(namespace)(rate(container_cpu_usage_seconds_total{namespace=~\"embb|urllc|mmtc\"}[1m]))","legendFormat":"{{namespace}}","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Host NIC Throughput (Worker ens33)","type":"timeseries","gridPos":{"h":7,"w":12,"x":12,"y":50},
+         "fieldConfig":{"defaults":{"unit":"Bps","custom":{"lineWidth":2,"fillOpacity":15,"gradientMode":"scheme"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"RX"},"properties":[{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"TX"},"properties":[{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]}]},
+         "targets":[
+           {"expr":"rate(host_net_rx_bytes{interface=\"ens33\"}[30s])","legendFormat":"RX","refId":"A"},
+           {"expr":"rate(host_net_tx_bytes{interface=\"ens33\"}[30s])","legendFormat":"TX","refId":"B"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}}
+
+      ],
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": ["5g","mec","slicing","noc","contention","qos","real-traffic"],
+      "time": {"from":"now-15m","to":"now"},
+      "timezone": "browser",
+      "title": "5G MEC NOC — Slice Contention Observatory",
+      "uid": "mec-noc-v3",
+      "version": 3
+    }

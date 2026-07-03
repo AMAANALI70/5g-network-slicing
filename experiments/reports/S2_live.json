@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "S2",
+    "description": "Wrong-Lever Avoidance",
+    "dry_run": false,
+    "ts": "2026-06-01T17:08:19.828449+00:00",
+    "verdict": "FAIL",
+    "cot_trace": [
+      {
+        "attempt": 1,
+        "rtt_ms": 71.1,
+        "embb_load_fraction": null,
+        "action": "throttle_embb",
+        "confidence": 0.6,
+        "lever_validity_score": 0.0,
+        "root_cause_assessment": "",
+        "lever_validity": "",
+        "wrong_lever_event": false
+      },
+      {
+        "attempt": 2,
+        "rtt_ms": 70.85,
+        "embb_load_fraction": null,
+        "action": "throttle_embb",
+        "confidence": 0.8,
+        "lever_validity_score": 0.8,
+        "root_cause_assessment": "RTT is elevated due to rising trend and high dead tunnels, with eMBB load fraction N/A but packet rate direction suggesting potential congestion.",
+        "lever_validity": "Throttling eMBB may address the identified cause by reducing queuing pressure on GTP backhaul, as RTT is latency-critical and eMBB throughput is currently OK.",
+        "wrong_lever_event": false
+      },
+      {
+        "attempt": 3,
+        "rtt_ms": 72.2,
+        "embb_load_fraction": null,
+        "action": "throttle_embb",
+        "confidence": 0.85,
+        "lever_validity_score": 0.85,
+        "root_cause_assessment": "RTT is elevated due to rising trend and high dead tunnels, with eMBB being a plausible cause as its load fraction is N/A but packet rate is low.",
+        "lever_validity": "Throttling eMBB can address the identified cause by reducing queuing pressure on the shared GTP backhaul, which should decrease URLLC RTT.",
+        "wrong_lever_event": false
+      }
+    ],
+    "pass_criteria": [
+      "action != throttle_embb",
+      "embb_load_fraction < 0.2 at decision time",
+      "root_cause_assessment does NOT cite eMBB as cause"
+    ],
+    "pass_note": "3/3 decisions incorrectly throttled eMBB despite low load fraction."
+  }
+]

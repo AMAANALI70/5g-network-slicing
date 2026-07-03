@@ -1,0 +1,238 @@
+---
+# URLLC Slice: Node-RED Industrial Telemetry Hub
+# Real IIoT platform with WebSocket server for bidirectional telemetry
+# Provides genuine RTT measurement — latency SLA violations emerge organically
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: urllc-app
+  namespace: urllc
+  labels:
+    app: urllc-app
+    slice: urllc
+    tier: application
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: urllc-app
+  template:
+    metadata:
+      labels:
+        app: urllc-app
+        slice: urllc
+        tier: application
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: kube
+      initContainers:
+        - name: flows-init
+          image: alpine:3.18
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              cp /config/flows.json /data/flows.json
+              cp /config/settings.js /data/settings.js
+              chown -R 1000:1000 /data
+              echo "Node-RED config initialized"
+          volumeMounts:
+            - name: nodered-config
+              mountPath: /config
+            - name: nodered-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+      containers:
+        - name: node-red
+          image: nodered/node-red:latest
+          ports:
+            - containerPort: 1880
+              name: http
+          env:
+            - name: NODE_RED_ENABLE_PROJECTS
+              value: "false"
+            - name: NODE_OPTIONS
+              value: "--max-old-space-size=256"
+          volumeMounts:
+            - name: nodered-data
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 1880
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 6
+      volumes:
+        - name: nodered-config
+          configMap:
+            name: urllc-nodered-config
+        - name: nodered-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: urllc-nodered-config
+  namespace: urllc
+data:
+  settings.js: |
+    module.exports = {
+        uiPort: 1880,
+        flowFile: 'flows.json',
+        userDir: '/data',
+        httpAdminRoot: '/',
+        httpNodeRoot: '/api',
+        logging: {
+            console: { level: "info", metrics: false, audit: false }
+        },
+        editorTheme: {
+            page: { title: "URLLC — 5G Edge Telemetry Hub" }
+        }
+    }
+
+  flows.json: |
+    [
+      {
+        "id": "flow-urllc-main",
+        "type": "tab",
+        "label": "URLLC Telemetry",
+        "disabled": false
+      },
+      {
+        "id": "ws-server-config",
+        "type": "websocket-listener",
+        "path": "/ws/telemetry",
+        "wholemsg": "false"
+      },
+      {
+        "id": "ws-in",
+        "type": "websocket in",
+        "z": "flow-urllc-main",
+        "name": "Telemetry Input",
+        "server": "ws-server-config",
+        "client": "",
+        "x": 140,
+        "y": 120,
+        "wires": [["msg-parse"]]
+      },
+      {
+        "id": "msg-parse",
+        "type": "function",
+        "z": "flow-urllc-main",
+        "name": "Parse + Control Response",
+        "func": "try {\n  var d = JSON.parse(msg.payload);\n  var now = Date.now();\n  // Generate realistic control command based on telemetry\n  var cmd = 'HOLD';\n  if (d.spindle_rpm > 3040) cmd = 'REDUCE_SPEED';\n  else if (d.spindle_rpm < 2960) cmd = 'INCREASE_SPEED';\n  if (d.vibration_x && Math.abs(d.vibration_x) > 0.03) cmd = 'EMERGENCY_STOP';\n  msg.payload = JSON.stringify({\n    control_cmd: cmd,\n    server_ts: now,\n    client_ts: d.timestamp_ns,\n    machine_id: d.machine_id || 'unknown',\n    status: 'OK'\n  });\n} catch(e) {\n  msg.payload = JSON.stringify({control_cmd:'HOLD', status:'PARSE_ERROR'});\n}\nreturn msg;",
+        "outputs": 1,
+        "x": 370,
+        "y": 120,
+        "wires": [["ws-out", "debug-out"]]
+      },
+      {
+        "id": "ws-out",
+        "type": "websocket out",
+        "z": "flow-urllc-main",
+        "name": "Control Response",
+        "server": "ws-server-config",
+        "client": "",
+        "x": 630,
+        "y": 100,
+        "wires": []
+      },
+      {
+        "id": "debug-out",
+        "type": "debug",
+        "z": "flow-urllc-main",
+        "name": "Telemetry Log",
+        "active": false,
+        "tosidebar": true,
+        "x": 630,
+        "y": 140,
+        "wires": []
+      },
+      {
+        "id": "http-in",
+        "type": "http in",
+        "z": "flow-urllc-main",
+        "name": "Telemetry POST",
+        "url": "/telemetry",
+        "method": "post",
+        "x": 140,
+        "y": 300,
+        "wires": [["http-parse"]]
+      },
+      {
+        "id": "http-parse",
+        "type": "function",
+        "z": "flow-urllc-main",
+        "name": "HTTP Control Response",
+        "func": "try {\n  var d = (typeof msg.payload === 'string') ? JSON.parse(msg.payload) : msg.payload;\n  var now = Date.now();\n  var cmd = 'HOLD';\n  if (d.spindle_rpm > 3040) cmd = 'REDUCE_SPEED';\n  else if (d.spindle_rpm < 2960) cmd = 'INCREASE_SPEED';\n  if (d.vibration_x && Math.abs(d.vibration_x) > 0.03) cmd = 'EMERGENCY_STOP';\n  msg.payload = {control_cmd: cmd, server_ts: now, machine_id: d.machine_id || 'unknown', status: 'OK'};\n  msg.statusCode = 200;\n} catch(e) {\n  msg.payload = {control_cmd: 'HOLD', status: 'PARSE_ERROR'};\n  msg.statusCode = 200;\n}\nreturn msg;",
+        "outputs": 1,
+        "x": 370,
+        "y": 300,
+        "wires": [["http-response"]]
+      },
+      {
+        "id": "http-response",
+        "type": "http response",
+        "z": "flow-urllc-main",
+        "name": "Send Response",
+        "statusCode": "",
+        "x": 610,
+        "y": 300,
+        "wires": []
+      },
+      {
+        "id": "status-inject",
+        "type": "inject",
+        "z": "flow-urllc-main",
+        "name": "Server Heartbeat",
+        "props": [{"p": "payload"}],
+        "repeat": "5",
+        "payload": "{\"type\":\"heartbeat\",\"server\":\"urllc-edge\",\"slice\":\"urllc\"}",
+        "payloadType": "str",
+        "x": 140,
+        "y": 400,
+        "wires": [["status-debug"]]
+      },
+      {
+        "id": "status-debug",
+        "type": "debug",
+        "z": "flow-urllc-main",
+        "name": "Heartbeat",
+        "active": false,
+        "tosidebar": true,
+        "x": 370,
+        "y": 400,
+        "wires": []
+      }
+    ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: urllc-app
+  namespace: urllc
+  labels:
+    app: urllc-app
+    slice: urllc
+spec:
+  selector:
+    app: urllc-app
+  ports:
+    - name: http
+      port: 1880
+      targetPort: 1880
+      nodePort: 30180
+  type: NodePort

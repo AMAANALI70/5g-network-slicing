@@ -1,0 +1,50 @@
+[
+  {
+    "scenario": "S2",
+    "description": "Wrong-Lever Avoidance",
+    "dry_run": false,
+    "ts": "2026-06-01T17:15:50.502191+00:00",
+    "verdict": "PASS",
+    "cot_trace": [
+      {
+        "attempt": 1,
+        "rtt_ms": 0,
+        "embb_load_fraction": null,
+        "action": "no_action",
+        "confidence": 0.8,
+        "lever_validity_score": 0.0,
+        "root_cause_assessment": "",
+        "lever_validity": "",
+        "wrong_lever_event": false
+      },
+      {
+        "attempt": 2,
+        "rtt_ms": 0,
+        "embb_load_fraction": null,
+        "action": "no_action",
+        "confidence": 1.0,
+        "lever_validity_score": 1.0,
+        "root_cause_assessment": "RTT elevation is caused by an external factor, as eMBB is idle and throttling will have zero effect on URLLC RTT.",
+        "lever_validity": "Throttling eMBB when it's idle won't address the root cause of elevated RTT; instead, we should wait for a potential congestion source to arise.",
+        "wrong_lever_event": false
+      },
+      {
+        "attempt": 3,
+        "rtt_ms": 0,
+        "embb_load_fraction": null,
+        "action": "no_action",
+        "confidence": 1.0,
+        "lever_validity_score": 1.0,
+        "root_cause_assessment": "RTT elevation is caused by an external factor, as eMBB is idle and throttling will have zero effect on URLLC RTT.",
+        "lever_validity": "Throttling eMBBB cannot address the identified cause of RTT elevation due to external factors.",
+        "wrong_lever_event": false
+      }
+    ],
+    "pass_criteria": [
+      "action != throttle_embb",
+      "embb_load_fraction < 0.2 at decision time",
+      "root_cause_assessment does NOT cite eMBB as cause"
+    ],
+    "pass_note": "Agent correctly avoided throttle_embb for all 3 decisions despite RTT violation. Wrong-Lever Avoidance confirmed."
+  }
+]

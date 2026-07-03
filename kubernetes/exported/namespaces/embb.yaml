@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: "2026-04-12T06:41:34Z"
+  labels:
+    kubernetes.io/metadata.name: embb
+  name: embb
+  resourceVersion: "4583"
+  uid: 1566fb42-0fbb-40e3-be15-738e9a3dd46d
+spec:
+  finalizers:
+  - kubernetes
+status:
+  phase: Active

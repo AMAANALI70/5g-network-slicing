@@ -1,0 +1,99 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+.eggs/
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs (keep structure, exclude large log files)
+*.log
+logs/*.log
+*.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large binary files (models are tracked via Git LFS or manually added)
+# *.pt
+# *.pkl
+
+# Sensitive data
+*.key
+*.pem
+*.crt
+kubeconfig-actual.yaml
+*-secret.yaml
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+temp/
+
+# Cache
+.cache/
+
+# Build artifacts
+*.o
+*.a
+*.so
+build/
+UERANSIM/build/
+
+# Data (large datasets - use Git LFS or external storage)
+# datasets/**/*.csv
+# datasets/**/*.zip
+
+# Node modules (if any)
+node_modules/
+
+# Google Gemini config
+.gemini/
+.antigravity/
+
+# Large binary files (>100MB — GitHub hard limit)
+# *.csv  # Removed - only specific large CSVs excluded below
+minikube*
+kubectl
+*.tar.gz
+*.zip
+*.deb
+
+# Exceptions — keep small CSVs committed if needed
+# !datasets/samples/**/*.csv
+
+# Exclude specific large experiment archives
+experiments/archive/pre_validation_2026_may/phase3_20260503/continuous.csv
+datasets/shinegami-139/static1/ue_qos_static_ran.csv

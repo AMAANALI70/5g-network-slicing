@@ -1,0 +1,57 @@
+\contentsline {chapter}{Acknowledgement}{2}{chapter*.1}%
+\contentsline {chapter}{ABSTRACT}{3}{chapter*.2}%
+\contentsline {chapter}{\numberline {1}INTRODUCTION}{2}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Motivation}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Literature Survey}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Problem Statement}{4}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Objectives and Scope of the Project}{4}{section.1.4}%
+\contentsline {subsection}{\numberline {1.4.1}Objectives}{4}{subsection.1.4.1}%
+\contentsline {subsection}{\numberline {1.4.2}Scope of the Project}{4}{subsection.1.4.2}%
+\contentsline {chapter}{\numberline {2}REQUIREMENT ANALYSIS}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Functional Requirements}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Non-Functional Requirements}{6}{section.2.2}%
+\contentsline {section}{\numberline {2.3}Hardware Requirements}{7}{section.2.3}%
+\contentsline {section}{\numberline {2.4}Software Requirements}{7}{section.2.4}%
+\contentsline {chapter}{\numberline {3}SYSTEM DESIGN}{8}{chapter.3}%
+\contentsline {section}{\numberline {3.1}System Architecture Diagrams}{8}{section.3.1}%
+\contentsline {section}{\numberline {3.2}MEC Architecture}{9}{section.3.2}%
+\contentsline {section}{\numberline {3.3}Control Loop}{9}{section.3.3}%
+\contentsline {section}{\numberline {3.4}Six Research Contributions}{10}{section.3.4}%
+\contentsline {section}{\numberline {3.5}Seven-Layer System Architecture}{11}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Agentic Orchestration Framework}{12}{section.3.6}%
+\contentsline {section}{\numberline {3.7}Individual Agent Architecture}{12}{section.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}Monitoring Agent}{12}{subsection.3.7.1}%
+\contentsline {subsection}{\numberline {3.7.2}Planning Agent}{13}{subsection.3.7.2}%
+\contentsline {subsection}{\numberline {3.7.3}Validation Gate}{13}{subsection.3.7.3}%
+\contentsline {section}{\numberline {3.8}Mathematical Foundations}{13}{section.3.8}%
+\contentsline {subsection}{\numberline {3.8.1}eMBB Load Fraction}{14}{subsection.3.8.1}%
+\contentsline {subsection}{\numberline {3.8.2}SLA Compliance Ratio}{14}{subsection.3.8.2}%
+\contentsline {subsection}{\numberline {3.8.3}Recovery Time}{14}{subsection.3.8.3}%
+\contentsline {subsection}{\numberline {3.8.4}Throughput Preservation Ratio}{14}{subsection.3.8.4}%
+\contentsline {subsection}{\numberline {3.8.5}Action Efficiency}{15}{subsection.3.8.5}%
+\contentsline {section}{\numberline {3.9}Control Loop State Transition Diagram}{15}{section.3.9}%
+\contentsline {chapter}{\numberline {4}ALGORITHM DESIGN}{16}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Orchestrator Design Diagrams}{16}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Algorithm 1: Monitoring and State Collection}{17}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Algorithm 2: eMBB Load Fraction Computation}{18}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Algorithm 3: Agentic Planning (Chain-of-Thought)}{19}{section.4.4}%
+\contentsline {section}{\numberline {4.5}Algorithm 4: Validation and Safety Gate}{20}{section.4.5}%
+\contentsline {section}{\numberline {4.6}Algorithm 5: Memory Update and Retention}{20}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Algorithm 6: Autonomous Control Loop}{21}{section.4.7}%
+\contentsline {chapter}{\numberline {5}IMPLEMENTATION}{22}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Physical Testbed Infrastructure}{22}{section.5.1}%
+\contentsline {section}{\numberline {5.2}5G Core and Slice Configuration}{22}{section.5.2}%
+\contentsline {section}{\numberline {5.3}User-Plane Isolation via HTB Traffic Shaping}{23}{section.5.3}%
+\contentsline {section}{\numberline {5.4}QoS Monitoring}{24}{section.5.4}%
+\contentsline {section}{\numberline {5.5}Orchestrator Control Loop}{24}{section.5.5}%
+\contentsline {section}{\numberline {5.6}Dataset Collection}{25}{section.5.6}%
+\contentsline {section}{\numberline {5.7}Experimental Campaign Design}{25}{section.5.7}%
+\contentsline {section}{\numberline {5.8}Testbed Automation}{26}{section.5.8}%
+\contentsline {chapter}{\numberline {6}RESULTS AND DISCUSSION}{27}{chapter.6}%
+\contentsline {section}{\numberline {6.1}Experimental Setup and Methodology}{27}{section.6.1}%
+\contentsline {section}{\numberline {6.2}Results (Most Important)}{27}{section.6.2}%
+\contentsline {section}{\numberline {6.3}Agentic Analysis}{30}{section.6.3}%
+\contentsline {section}{\numberline {6.4}LLM Analysis}{33}{section.6.4}%
+\contentsline {section}{\numberline {6.5}Statistical Summary}{35}{section.6.5}%
+\contentsline {section}{\numberline {6.6}Comprehensive KPI Comparison}{36}{section.6.6}%
+\contentsline {section}{\numberline {6.7}Discussion}{36}{section.6.7}%

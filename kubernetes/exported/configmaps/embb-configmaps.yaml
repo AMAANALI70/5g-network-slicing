@@ -1,0 +1,289 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    index.html: |
+      <!DOCTYPE html>
+      <html>
+      <head><title>eMBB Slice - 5G Edge Content Server</title></head>
+      <body>
+      <h1>eMBB Slice Content Delivery</h1>
+      <p>Slice: Enhanced Mobile Broadband (SST:1, DNN:internet)</p>
+      <p>UE Subnet: 10.45.0.0/16 &rarr; 192.168.49.171 (kube worker)</p>
+      <p>QoS: High throughput, moderate latency</p>
+      </body>
+      </html>
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"index.html":"\u003c!DOCTYPE html\u003e\n\u003chtml\u003e\n\u003chead\u003e\u003ctitle\u003eeMBB Slice - 5G Edge Content Server\u003c/title\u003e\u003c/head\u003e\n\u003cbody\u003e\n\u003ch1\u003eeMBB Slice Content Delivery\u003c/h1\u003e\n\u003cp\u003eSlice: Enhanced Mobile Broadband (SST:1, DNN:internet)\u003c/p\u003e\n\u003cp\u003eUE Subnet: 10.45.0.0/16 \u0026rarr; 192.168.49.171 (kube worker)\u003c/p\u003e\n\u003cp\u003eQoS: High throughput, moderate latency\u003c/p\u003e\n\u003c/body\u003e\n\u003c/html\u003e\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"embb-app-content","namespace":"embb"}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    name: embb-app-content
+    namespace: embb
+    resourceVersion: "56758"
+    uid: e1d920e3-1929-4648-ba7e-f57367220e36
+- apiVersion: v1
+  data:
+    default.conf: |
+      server {
+          listen 80;
+          server_name _;
+          location / {
+              root /usr/share/nginx/html;
+              autoindex on;
+          }
+          location /stub_status {
+              stub_status;
+          }
+      }
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"default.conf":"server {\n    listen 80;\n    server_name _;\n    location / {\n        root /usr/share/nginx/html;\n        autoindex on;\n    }\n    location /stub_status {\n        stub_status;\n    }\n}\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"embb-nginx-config","namespace":"embb"}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    name: embb-nginx-config
+    namespace: embb
+    resourceVersion: "56757"
+    uid: 8f004537-45b0-4f4b-bc2c-3d3bd9f03238
+- apiVersion: v1
+  data:
+    default.conf: |
+      server {
+          listen 8080;
+          server_name _;
+          root /usr/share/nginx/html;
+
+          # HLS streaming headers
+          location /hls/ {
+              types {
+                  application/vnd.apple.mpegurl m3u8;
+                  video/mp2t ts;
+              }
+              add_header Cache-Control no-cache;
+              add_header Access-Control-Allow-Origin *;
+              add_header X-Slice-Type eMBB;
+              # Enable byte-range for segment fetching
+              add_header Accept-Ranges bytes;
+          }
+
+          # Status endpoint for monitoring
+          location /status {
+              stub_status on;
+              access_log off;
+          }
+
+          # Health check
+          location /healthz {
+              return 200 "eMBB HLS OK\n";
+              add_header Content-Type text/plain;
+          }
+      }
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"default.conf":"server {\n    listen 8080;\n    server_name _;\n    root /usr/share/nginx/html;\n\n    # HLS streaming headers\n    location /hls/ {\n        types {\n            application/vnd.apple.mpegurl m3u8;\n            video/mp2t ts;\n        }\n        add_header Cache-Control no-cache;\n        add_header Access-Control-Allow-Origin *;\n        add_header X-Slice-Type eMBB;\n        # Enable byte-range for segment fetching\n        add_header Accept-Ranges bytes;\n    }\n\n    # Status endpoint for monitoring\n    location /status {\n        stub_status on;\n        access_log off;\n    }\n\n    # Health check\n    location /healthz {\n        return 200 \"eMBB HLS OK\\n\";\n        add_header Content-Type text/plain;\n    }\n}\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"embb-nginx-hls-config","namespace":"embb"}}
+    creationTimestamp: "2026-05-01T08:00:16Z"
+    name: embb-nginx-hls-config
+    namespace: embb
+    resourceVersion: "2521671"
+    uid: 40631c77-28eb-4b07-811d-3fea3c2dda47
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIIAs2gaY8mJ7MwDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNjA0MTIwNTQ5NTZaFw0zNjA0MDkwNTU0NTZaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQDVzxM0KG4jz2D2jqwcslibvAUB5UnFCp6NKAdMc/KMx+kvMwYKvfqpLuQA
+      gW+L+iaVpbvwPOsVF33LdHIzfOlgYPKljGiM2LEwu5RhZps6GouSjP8NnnS5A0Dc
+      6KR5G240ZB+Zfe3BcruV8PYuviAQdPWIbFwLJ1v1A5GmAqnjWPppSkdnnTS0g0rv
+      kWiv3TO6ypoP90V4V+rnAIhnr3GhHyJwOfwZV/rJ28N8reeBu+KPAma4KQiG4dOL
+      cw+WJSOHSogJ27Y21s6BHTwWjrppiqPbES+EklRDb7/feow/ISh/bzNMZmV4xoeW
+      /9Lvc3KQRuO8phlkWt53oExymLWrAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRSsNXBE3/RvxgADDNnAuYRAptE+TAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQB4aH/w4GvW
+      h3pOI1S0VrDkUEj7wASU36a7cDOppw9OktkuLAzslpBeOge09yqCo1paSncWjGHl
+      hq/S4kzo9Ww8Emjgupsu8UXnC6Xj4AzhoqlRsm3V1BAHE9l8rQj2Lv0BX+QcCdRz
+      AxxSoq/rTFL8mJuvgiI+4WIvU153uHQQcW+qsEKZAa6/AZKkuOgTGBQJdU+is8qd
+      k5RtnjY7D9zlH3AsNphHxqSn2sCmqj4WrALqrf0bHKKQwwGmVOcDIlsJt1kOpZ+C
+      MG9l+cDDWqB8//fmV7PN2zaQoR1kCGW+B5lPF48R1NiBoFLNAKjYamjjc7xxAvrI
+      969sRYkvXnLV
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-04-12T06:41:34Z"
+    name: kube-root-ca.crt
+    namespace: embb
+    resourceVersion: "4586"
+    uid: 7bf750cd-0dee-472d-ab80-79287b8c3653
+- apiVersion: v1
+  data:
+    upf-embb.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-embb.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.172
+              port: 8805
+        gtpu:
+          server:
+            - address: 192.168.49.172
+              port: 2152
+        session:
+          - subnet: 10.45.0.0/24
+            gateway: 10.45.0.1
+            dev: ogstun-embb
+            dnn: internet
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf-embb.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-embb.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.172\n        port: 8805\n  gtpu:\n    server:\n      - address: 192.168.49.172\n        port: 2152\n  session:\n    - subnet: 10.45.0.0/24\n      gateway: 10.45.0.1\n      dev: ogstun-embb\n      dnn: internet\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-embb-config","namespace":"embb"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-embb-config
+    namespace: embb
+    resourceVersion: "4332559"
+    uid: 5925529b-d5d0-47ec-91ae-e1dcd81671ac
+- apiVersion: v1
+  data:
+    upf-embb.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-embb.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.181
+              port: 8805
+        gtpu:
+          server:
+            - address: 192.168.49.181
+              port: 2152
+        session:
+          - subnet: 10.45.0.0/24
+            gateway: 10.45.0.1
+            dev: ogstun-embb
+            dnn: internet
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf-embb.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-embb.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.181\n        port: 8805\n  gtpu:\n    server:\n      - address: 192.168.49.181\n        port: 2152\n  session:\n    - subnet: 10.45.0.0/24\n      gateway: 10.45.0.1\n      dev: ogstun-embb\n      dnn: internet\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-embb-node2-config","namespace":"embb"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-embb-node2-config
+    namespace: embb
+    resourceVersion: "4596"
+    uid: 920ea348-d7d0-4c80-9d6f-490c297c6296
+- apiVersion: v1
+  data:
+    upf.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-node1.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.171
+              port: 8805
+            - address: 192.168.49.171
+              port: 8806
+            - address: 192.168.49.171
+              port: 8807
+        gtpu:
+          server:
+            - address: 192.168.49.171
+              port: 2152
+        session:
+          - subnet: 10.45.0.0/24
+            gateway: 10.45.0.1
+            dev: ogstun-embb
+            dnn: internet
+          - subnet: 10.46.0.0/24
+            gateway: 10.46.0.1
+            dev: ogstun-urllc
+            dnn: urllc
+          - subnet: 10.47.0.0/24
+            gateway: 10.47.0.1
+            dev: ogstun-mmtc
+            dnn: iot
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-node1.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.171\n        port: 8805\n      - address: 192.168.49.171\n        port: 8806\n      - address: 192.168.49.171\n        port: 8807\n  gtpu:\n    server:\n      - address: 192.168.49.171\n        port: 2152\n  session:\n    - subnet: 10.45.0.0/24\n      gateway: 10.45.0.1\n      dev: ogstun-embb\n      dnn: internet\n    - subnet: 10.46.0.0/24\n      gateway: 10.46.0.1\n      dev: ogstun-urllc\n      dnn: urllc\n    - subnet: 10.47.0.0/24\n      gateway: 10.47.0.1\n      dev: ogstun-mmtc\n      dnn: iot\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-node1-config","namespace":"embb"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-node1-config
+    namespace: embb
+    resourceVersion: "4752"
+    uid: 249d3a26-c0a5-426d-8453-c5bc892e5d08
+- apiVersion: v1
+  data:
+    upf.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-node2.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.181
+              port: 8805
+            - address: 192.168.49.181
+              port: 8806
+            - address: 192.168.49.181
+              port: 8807
+        gtpu:
+          server:
+            - address: 192.168.49.181
+              port: 2152
+        session:
+          - subnet: 10.45.0.0/24
+            gateway: 10.45.0.1
+            dev: ogstun-embb
+            dnn: internet
+          - subnet: 10.46.0.0/24
+            gateway: 10.46.0.1
+            dev: ogstun-urllc
+            dnn: urllc
+          - subnet: 10.47.0.0/24
+            gateway: 10.47.0.1
+            dev: ogstun-mmtc
+            dnn: iot
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-node2.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.181\n        port: 8805\n      - address: 192.168.49.181\n        port: 8806\n      - address: 192.168.49.181\n        port: 8807\n  gtpu:\n    server:\n      - address: 192.168.49.181\n        port: 2152\n  session:\n    - subnet: 10.45.0.0/24\n      gateway: 10.45.0.1\n      dev: ogstun-embb\n      dnn: internet\n    - subnet: 10.46.0.0/24\n      gateway: 10.46.0.1\n      dev: ogstun-urllc\n      dnn: urllc\n    - subnet: 10.47.0.0/24\n      gateway: 10.47.0.1\n      dev: ogstun-mmtc\n      dnn: iot\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-node2-config","namespace":"embb"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-node2-config
+    namespace: embb
+    resourceVersion: "4754"
+    uid: 2d1f336f-5381-4e7c-9cb7-c0ca7a044b54
+kind: List
+metadata:
+  resourceVersion: ""

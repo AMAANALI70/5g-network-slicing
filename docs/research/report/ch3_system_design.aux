@@ -1,0 +1,105 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\@writefile{toc}{\contentsline {chapter}{\numberline {3}SYSTEM DESIGN}{8}{chapter.3}\protected@file@percent }
+\@writefile{lof}{\addvspace {10\p@ }}
+\@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {section}{\numberline {3.1}System Architecture Diagrams}{8}{section.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces Comprehensive Agentic Testbed Architecture, illustrating the physical separation of nodes and the decoupling of the multi-agent control loop from the 5G data plane.\relax }}{8}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:testbed_arch}{{3.1}{8}{Comprehensive Agentic Testbed Architecture, illustrating the physical separation of nodes and the decoupling of the multi-agent control loop from the 5G data plane.\relax }{figure.caption.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces Slice Architecture showing complete isolation.\relax }}{8}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:slice_arch}{{3.2}{8}{Slice Architecture showing complete isolation.\relax }{figure.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces UE Registration \& Slice Selection Flow.\relax }}{9}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:ue_flow}{{3.3}{9}{UE Registration \& Slice Selection Flow.\relax }{figure.caption.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.2}MEC Architecture}{9}{section.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces MEC Traffic Locality with local breakout.\relax }}{9}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:mec_locality}{{3.4}{9}{MEC Traffic Locality with local breakout.\relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces Kubernetes Deployment Diagram.\relax }}{9}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:k8s_deploy}{{3.5}{9}{Kubernetes Deployment Diagram.\relax }{figure.caption.12}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}Control Loop}{9}{section.3.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.6}{\ignorespaces Closed Loop QoS Control.\relax }}{10}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:closed_loop}{{3.6}{10}{Closed Loop QoS Control.\relax }{figure.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.7}{\ignorespaces \texttt  {tc} Enforcement Point.\relax }}{10}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:tc_enf}{{3.7}{10}{\texttt {tc} Enforcement Point.\relax }{figure.caption.14}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}Six Research Contributions}{10}{section.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}Seven-Layer System Architecture}{11}{section.3.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.8}{\ignorespaces Seven-Layer End-to-End System Architecture. Solid arrows denote data-plane flows; dashed arrows denote control and observability flows.\relax }}{11}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:sevenlayer}{{3.8}{11}{Seven-Layer End-to-End System Architecture. Solid arrows denote data-plane flows; dashed arrows denote control and observability flows.\relax }{figure.caption.15}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}Agentic Orchestration Framework}{12}{section.3.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.9}{\ignorespaces LangGraph Multi-Agent Orchestration Pipeline (Contribution C2). Each node is a specialised agent; dashed arrows represent cross-cycle feedback.\relax }}{12}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:langgraph_pipeline}{{3.9}{12}{LangGraph Multi-Agent Orchestration Pipeline (Contribution C2). Each node is a specialised agent; dashed arrows represent cross-cycle feedback.\relax }{figure.caption.16}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.7}Individual Agent Architecture}{12}{section.3.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.1}Monitoring Agent}{12}{subsection.3.7.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.10}{\ignorespaces Monitoring Agent Architecture (Contribution C4). Three input collectors feed an aggregator; the derived load-fraction metric is written to the thread-safe state cache.\relax }}{12}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:mon_agent}{{3.10}{12}{Monitoring Agent Architecture (Contribution C4). Three input collectors feed an aggregator; the derived load-fraction metric is written to the thread-safe state cache.\relax }{figure.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.2}Planning Agent}{13}{subsection.3.7.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.11}{\ignorespaces Planning Agent Architecture (Contributions C3, C5). State and memory are injected into a structured prompt; the LLM generates a mandatory CoT schema.\relax }}{13}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:plan_agent}{{3.11}{13}{Planning Agent Architecture (Contributions C3, C5). State and memory are injected into a structured prompt; the LLM generates a mandatory CoT schema.\relax }{figure.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7.3}Validation Gate}{13}{subsection.3.7.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.12}{\ignorespaces Validation Gate Architecture (Contribution C4). Contradiction detection catches logical inconsistencies between the \texttt  {root\_cause\_assessment} and the proposed action.\relax }}{13}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:val_gate}{{3.12}{13}{Validation Gate Architecture (Contribution C4). Contradiction detection catches logical inconsistencies between the \texttt {root\_cause\_assessment} and the proposed action.\relax }{figure.caption.19}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.8}Mathematical Foundations}{13}{section.3.8}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3.1}{\ignorespaces Mathematical Notation\relax }}{14}{table.caption.20}\protected@file@percent }
+\newlabel{tab:notation}{{3.1}{14}{Mathematical Notation\relax }{table.caption.20}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8.1}eMBB Load Fraction}{14}{subsection.3.8.1}\protected@file@percent }
+\newlabel{eq:load_frac}{{3.1}{14}{eMBB Load Fraction}{equation.3.8.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8.2}SLA Compliance Ratio}{14}{subsection.3.8.2}\protected@file@percent }
+\newlabel{eq:sla_comp}{{3.2}{14}{SLA Compliance Ratio}{equation.3.8.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8.3}Recovery Time}{14}{subsection.3.8.3}\protected@file@percent }
+\newlabel{eq:trec}{{3.3}{14}{Recovery Time}{equation.3.8.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8.4}Throughput Preservation Ratio}{14}{subsection.3.8.4}\protected@file@percent }
+\newlabel{eq:tp}{{3.4}{14}{Throughput Preservation Ratio}{equation.3.8.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.8.5}Action Efficiency}{15}{subsection.3.8.5}\protected@file@percent }
+\newlabel{eq:eff}{{3.5}{15}{Action Efficiency}{equation.3.8.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.9}Control Loop State Transition Diagram}{15}{section.3.9}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3.13}{\ignorespaces Orchestrator Control Loop State Machine. WLA = Wrong-Lever Avoidance (C4). The dashed path is structurally impossible in rule-based systems.\relax }}{15}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:fsm}{{3.13}{15}{Orchestrator Control Loop State Machine. WLA = Wrong-Lever Avoidance (C4). The dashed path is structurally impossible in rule-based systems.\relax }{figure.caption.21}{}}
+\@setckpt{ch3_system_design}{
+\setcounter{page}{16}
+\setcounter{equation}{5}
+\setcounter{enumi}{6}
+\setcounter{enumii}{0}
+\setcounter{enumiii}{0}
+\setcounter{enumiv}{0}
+\setcounter{footnote}{0}
+\setcounter{mpfootnote}{0}
+\setcounter{part}{0}
+\setcounter{chapter}{3}
+\setcounter{section}{9}
+\setcounter{subsection}{0}
+\setcounter{subsubsection}{0}
+\setcounter{paragraph}{0}
+\setcounter{subparagraph}{0}
+\setcounter{figure}{13}
+\setcounter{table}{1}
+\setcounter{parentequation}{0}
+\setcounter{LT@tables}{0}
+\setcounter{LT@chunks}{0}
+\setcounter{Item}{11}
+\setcounter{Hfootnote}{0}
+\setcounter{bookmark@seq@number}{32}
+\setcounter{lstnumber}{1}
+\setcounter{caption@flags}{0}
+\setcounter{continuedfloat}{0}
+\setcounter{subfigure}{0}
+\setcounter{subtable}{0}
+\setcounter{float@type}{32}
+\setcounter{algorithm}{0}
+\setcounter{ALG@line}{0}
+\setcounter{ALG@rem}{0}
+\setcounter{ALG@nested}{0}
+\setcounter{ALG@Lnr}{2}
+\setcounter{ALG@blocknr}{10}
+\setcounter{ALG@storecount}{0}
+\setcounter{ALG@tmpcounter}{0}
+\setcounter{r@tfl@t}{0}
+\setcounter{tcbbreakpart}{2}
+\setcounter{tcblayer}{0}
+\setcounter{tcolorbox@number}{2}
+\setcounter{tcbrastercolumn}{1}
+\setcounter{tcbrasterrow}{1}
+\setcounter{tcbrasternum}{1}
+\setcounter{tcbraster}{0}
+\setcounter{tcblisting}{0}
+\setcounter{section@level}{0}
+\setcounter{lstlisting}{0}
+}

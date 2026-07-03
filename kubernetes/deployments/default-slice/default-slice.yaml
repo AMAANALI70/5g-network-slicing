@@ -1,0 +1,102 @@
+# ============================================================
+# Default / Best-Effort Slice
+# Fallback for non-slice-specific or unknown traffic
+# DNN: internet (SST:1) — lowest priority
+# ============================================================
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default-slice
+  labels:
+    slice: default
+    priority: "0"
+
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: default-slice-quota
+  namespace: default-slice
+spec:
+  hard:
+    requests.cpu: "250m"
+    limits.cpu: "500m"
+    requests.memory: "128Mi"
+    limits.memory: "256Mi"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: default-app
+  namespace: default-slice
+  labels:
+    app: default-app
+    slice: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: default-app
+  template:
+    metadata:
+      labels:
+        app: default-app
+        slice: default
+    spec:
+      # Pin to kube worker — same node as ogstun-embb UPF
+      # This is required: NodePort traffic arrives on kube via GTP/ogstun-embb;
+      # if pod is on kube2, the cross-node Flannel routing fails for UPF traffic.
+      nodeSelector:
+        kubernetes.io/hostname: kube
+      containers:
+      - name: default-app
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+          name: http
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "32Mi"
+          limits:
+            cpu: "250m"
+            memory: "128Mi"
+        # Custom index.html to identify default slice responses
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - "echo '5G MEC Default Slice - Best Effort Traffic' > /usr/share/nginx/html/index.html"
+        # No readinessProbe delay — nginx starts immediately
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 2
+          periodSeconds: 5
+          failureThreshold: 3
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: default-app
+  namespace: default-slice
+  labels:
+    slice: default
+spec:
+  type: NodePort
+  # Cluster: NodePort works on ALL nodes, not just the pod's node
+  externalTrafficPolicy: Cluster
+  selector:
+    app: default-app
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    nodePort: 30800

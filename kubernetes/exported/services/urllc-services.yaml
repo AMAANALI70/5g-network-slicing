@@ -1,0 +1,73 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"upf-urllc","slice":"urllc"},"name":"upf-urllc-metrics","namespace":"urllc"},"spec":{"ports":[{"name":"metrics","port":9091,"targetPort":9091}],"selector":{"app":"upf-urllc"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    labels:
+      app: upf-urllc
+      slice: urllc
+    name: upf-urllc-metrics
+    namespace: urllc
+    resourceVersion: "4770"
+    uid: c0d4eee3-9d60-4522-9ba2-55ea29f7b522
+  spec:
+    clusterIP: 10.101.61.67
+    clusterIPs:
+    - 10.101.61.67
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: metrics
+      port: 9091
+      protocol: TCP
+      targetPort: 9091
+    selector:
+      app: upf-urllc
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"urllc-app","slice":"urllc"},"name":"urllc-app","namespace":"urllc"},"spec":{"ports":[{"name":"http","nodePort":30180,"port":1880,"targetPort":1880}],"selector":{"app":"urllc-app"},"type":"NodePort"}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    labels:
+      app: urllc-app
+      slice: urllc
+    name: urllc-app
+    namespace: urllc
+    resourceVersion: "2521705"
+    uid: 3da47f83-8ca1-4387-a428-de0e887e7a74
+  spec:
+    clusterIP: 10.102.49.22
+    clusterIPs:
+    - 10.102.49.22
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      nodePort: 30180
+      port: 1880
+      protocol: TCP
+      targetPort: 1880
+    selector:
+      app: urllc-app
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

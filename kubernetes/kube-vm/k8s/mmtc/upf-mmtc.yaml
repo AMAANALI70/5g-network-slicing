@@ -1,0 +1,121 @@
+---
+# ============================================================
+# mMTC UPF — ConfigMap
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-mmtc-config
+  namespace: mmtc
+data:
+  upf-mmtc.yaml: |
+    logger:
+      file:
+        path: /var/log/open5gs/upf-mmtc.log
+      level: info
+    global:
+      max:
+        ue: 1024
+    upf:
+      pfcp:
+        server:
+          - address: 192.168.49.171
+            port: 8807
+      gtpu:
+        server:
+          - address: 192.168.49.173
+            port: 2152
+      session:
+        - subnet: 10.47.0.0/24
+          gateway: 10.47.0.1
+          dev: ogstun-mmtc
+          dnn: iot
+
+---
+# ============================================================
+# mMTC UPF — Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf-mmtc
+  namespace: mmtc
+  labels:
+    app: upf-mmtc
+    slice: mmtc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upf-mmtc
+  template:
+    metadata:
+      labels:
+        app: upf-mmtc
+        slice: mmtc
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: upf
+          image: open5gs-upf:local
+          imagePullPolicy: Never
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]
+          env:
+            - name: TUN_DEV
+              value: "ogstun-mmtc"
+            - name: UE_SUBNET
+              value: "10.47.0.0/24"
+            - name: UE_GATEWAY
+              value: "10.47.0.1/24"
+            - name: UPF_CONFIG
+              value: "/config/upf-mmtc.yaml"
+            # tc shaping: mMTC = low bandwidth for IoT
+            - name: TC_RATE
+              value: "1mbit"
+            - name: TC_CEIL
+              value: "5mbit"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+      volumes:
+        - name: config
+          configMap:
+            name: upf-mmtc-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+
+---
+# ============================================================
+# mMTC UPF — Metrics Service
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: upf-mmtc-metrics
+  namespace: mmtc
+  labels:
+    app: upf-mmtc
+    slice: mmtc
+spec:
+  type: ClusterIP
+  selector:
+    app: upf-mmtc
+  ports:
+    - name: metrics
+      port: 9092
+      targetPort: 9092

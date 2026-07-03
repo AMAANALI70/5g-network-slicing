@@ -1,0 +1,16 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {2.1}{\ignorespaces Hardware Configuration of the Testbed\relax }}{7}{table.caption.6}%
+\contentsline {table}{\numberline {2.2}{\ignorespaces Software Stack and Version Requirements\relax }}{7}{table.caption.7}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {3.1}{\ignorespaces Mathematical Notation\relax }}{14}{table.caption.20}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {5.1}{\ignorespaces Testbed Infrastructure Inventory\relax }}{22}{table.caption.25}%
+\contentsline {table}{\numberline {5.2}{\ignorespaces Slice Configuration: S-NSSAI to SMF and UPF Mapping\relax }}{23}{table.caption.26}%
+\contentsline {table}{\numberline {5.3}{\ignorespaces Per-Slice Metrics Collected at Each Monitoring Cycle\relax }}{24}{table.caption.28}%
+\contentsline {table}{\numberline {5.4}{\ignorespaces Experimental Parameters\relax }}{26}{table.caption.32}%
+\addvspace {10\p@ }
+\contentsline {table}{\numberline {6.1}{\ignorespaces Experimental Configuration\relax }}{27}{table.caption.33}%
+\contentsline {table}{\numberline {6.2}{\ignorespaces Statistical Results\relax }}{35}{table.caption.50}%
+\contentsline {table}{\numberline {6.3}{\ignorespaces Full KPI Matrix: Agentic vs.\ Rule-Based Orchestrator (30-minute trial mean)\relax }}{36}{table.caption.51}%

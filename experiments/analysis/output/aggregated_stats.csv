@@ -1,0 +1,7 @@
+orchestrator_type,load_level,mean,median,std,min,max,viol_pct_15ms,viol_pct_20ms,embb_mbps_mean,tc_rate_mean
+agentic,high,13.6,13.2,1.87,11.63,43.2,11.8,0.6,130.6,744.4
+agentic,low,13.78,13.13,4.11,11.6,83.33,11.5,1.4,111.9,759.7
+agentic,medium,13.23,13.13,0.84,12.0,23.73,2.1,0.1,102.7,775.0
+rule_based,high,13.47,12.83,3.93,11.7,70.3,5.9,0.9,105.7,977.8
+rule_based,low,14.83,12.73,14.28,0.0,271.37,13.3,5.2,92.0,847.0
+rule_based,medium,14.14,12.7,8.21,11.73,118.2,10.7,2.6,105.3,938.6

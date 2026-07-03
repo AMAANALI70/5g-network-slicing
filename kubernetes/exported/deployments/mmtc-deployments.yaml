@@ -1,0 +1,563 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "2"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"influxdb","slice":"mmtc","tier":"storage"},"name":"influxdb","namespace":"mmtc"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"influxdb"}},"template":{"metadata":{"labels":{"app":"influxdb","slice":"mmtc","tier":"storage"}},"spec":{"containers":[{"env":[{"name":"INFLUXDB_DB","value":"mmtc_telemetry"},{"name":"INFLUXDB_HTTP_AUTH_ENABLED","value":"false"},{"name":"INFLUXDB_DATA_ENGINE","value":"tsm1"},{"name":"INFLUXDB_REPORTING_DISABLED","value":"true"}],"image":"influxdb:1.8-alpine","name":"influxdb","ports":[{"containerPort":8086,"name":"http"}],"readinessProbe":{"httpGet":{"path":"/ping","port":8086},"initialDelaySeconds":10,"periodSeconds":5},"resources":{"limits":{"cpu":"500m","memory":"1Gi"},"requests":{"cpu":"100m","memory":"256Mi"}},"volumeMounts":[{"mountPath":"/var/lib/influxdb","name":"influxdb-data"}]}],"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"emptyDir":{"sizeLimit":"5Gi"},"name":"influxdb-data"}]}}}}
+    creationTimestamp: "2026-05-01T08:00:17Z"
+    generation: 2
+    labels:
+      app: influxdb
+      slice: mmtc
+      tier: storage
+    name: influxdb
+    namespace: mmtc
+    resourceVersion: "6391825"
+    uid: c1be67ff-b1b1-4650-8d03-534378c4593b
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: influxdb
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-05-01T13:38:59+05:30"
+        creationTimestamp: null
+        labels:
+          app: influxdb
+          slice: mmtc
+          tier: storage
+      spec:
+        containers:
+        - env:
+          - name: INFLUXDB_DB
+            value: mmtc_telemetry
+          - name: INFLUXDB_HTTP_AUTH_ENABLED
+            value: "false"
+          - name: INFLUXDB_DATA_ENGINE
+            value: tsm1
+          - name: INFLUXDB_REPORTING_DISABLED
+            value: "true"
+          image: influxdb:1.8-alpine
+          imagePullPolicy: IfNotPresent
+          name: influxdb
+          ports:
+          - containerPort: 8086
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: 8086
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /var/lib/influxdb
+            name: influxdb-data
+        dnsPolicy: ClusterFirst
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir:
+            sizeLimit: 5Gi
+          name: influxdb-data
+  status:
+    conditions:
+    - lastTransitionTime: "2026-05-01T08:00:17Z"
+      lastUpdateTime: "2026-05-01T08:09:39Z"
+      message: ReplicaSet "influxdb-7b4c95fd84" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-06-12T07:20:40Z"
+      lastUpdateTime: "2026-06-12T07:20:40Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    - lastTransitionTime: "2026-06-12T07:25:46Z"
+      lastUpdateTime: "2026-06-12T07:25:46Z"
+      message: 'pods "influxdb-7b4c95fd84-s2v9q" is forbidden: exceeded quota: mmtc-quota,
+        requested: limits.cpu=500m, used: limits.cpu=1, limited: limits.cpu=1100m'
+      reason: FailedCreate
+      status: "True"
+      type: ReplicaFailure
+    observedGeneration: 2
+    unavailableReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "7"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"mmtc-app","slice":"mmtc","tier":"application"},"name":"mmtc-app","namespace":"mmtc"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"mmtc-app"}},"template":{"metadata":{"labels":{"app":"mmtc-app","slice":"mmtc","tier":"application"}},"spec":{"containers":[{"image":"eclipse-mosquitto:2.0","name":"mosquitto","ports":[{"containerPort":1883,"name":"mqtt"},{"containerPort":9001,"name":"mqtt-ws"}],"resources":{"limits":{"cpu":"200m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"64Mi"}},"volumeMounts":[{"mountPath":"/mosquitto/config","name":"mosquitto-config"}]}],"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"configMap":{"name":"mosquitto-config"},"name":"mosquitto-config"}]}}}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    generation: 58
+    labels:
+      app: mmtc-app
+      slice: mmtc
+      tier: application
+    name: mmtc-app
+    namespace: mmtc
+    resourceVersion: "6391800"
+    uid: a4d35d5e-c454-4019-a597-8f487e1cddb5
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: mmtc-app
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-05-26T20:58:45+05:30"
+        creationTimestamp: null
+        labels:
+          app: mmtc-app
+          slice: mmtc
+          tier: application
+      spec:
+        containers:
+        - image: eclipse-mosquitto:2.0
+          imagePullPolicy: IfNotPresent
+          name: mosquitto
+          ports:
+          - containerPort: 1883
+            name: mqtt
+            protocol: TCP
+          - containerPort: 9001
+            name: mqtt-ws
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /mosquitto/config
+            name: mosquitto-config
+        dnsPolicy: ClusterFirst
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: mosquitto-config
+          name: mosquitto-config
+  status:
+    conditions:
+    - lastTransitionTime: "2026-06-01T09:59:34Z"
+      lastUpdateTime: "2026-06-01T09:59:36Z"
+      message: ReplicaSet "mmtc-app-77899f7894" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-06-06T07:15:21Z"
+      lastUpdateTime: "2026-06-06T07:15:21Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    - lastTransitionTime: "2026-06-06T07:15:21Z"
+      lastUpdateTime: "2026-06-06T07:15:21Z"
+      message: 'pods "mmtc-app-77899f7894-kmmlp" is forbidden: exceeded quota: mmtc-quota,
+        requested: limits.cpu=200m, used: limits.cpu=1, limited: limits.cpu=1100m'
+      reason: FailedCreate
+      status: "True"
+      type: ReplicaFailure
+    observedGeneration: 58
+    unavailableReplicas: 3
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "3"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"mmtc-nodered","slice":"mmtc","tier":"processing"},"name":"mmtc-nodered","namespace":"mmtc"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"mmtc-nodered"}},"template":{"metadata":{"labels":{"app":"mmtc-nodered","slice":"mmtc","tier":"processing"}},"spec":{"containers":[{"env":[{"name":"NODE_OPTIONS","value":"--max-old-space-size=256"}],"image":"nodered/node-red:latest","name":"node-red","ports":[{"containerPort":1880,"name":"http"}],"readinessProbe":{"httpGet":{"path":"/","port":1880},"initialDelaySeconds":20,"periodSeconds":10},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}},"volumeMounts":[{"mountPath":"/data","name":"nodered-data"}]}],"initContainers":[{"args":["cp /config/flows.json /data/flows.json\ncp /config/settings.js /data/settings.js\nchown -R 1000:1000 /data\necho \"mMTC Node-RED config initialized\"\n"],"command":["/bin/sh","-c"],"image":"alpine:3.18","name":"flows-init","resources":{"limits":{"cpu":"100m","memory":"64Mi"},"requests":{"cpu":"50m","memory":"32Mi"}},"volumeMounts":[{"mountPath":"/config","name":"nodered-config"},{"mountPath":"/data","name":"nodered-data"}]}],"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"configMap":{"name":"mmtc-nodered-config"},"name":"nodered-config"},{"emptyDir":{},"name":"nodered-data"}]}}}}
+    creationTimestamp: "2026-05-01T08:00:17Z"
+    generation: 3
+    labels:
+      app: mmtc-nodered
+      slice: mmtc
+      tier: processing
+    name: mmtc-nodered
+    namespace: mmtc
+    resourceVersion: "8691002"
+    uid: 2d929daf-050c-45c9-9798-8953e1bc6942
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: mmtc-nodered
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-05-01T13:38:59+05:30"
+        creationTimestamp: null
+        labels:
+          app: mmtc-nodered
+          slice: mmtc
+          tier: processing
+      spec:
+        containers:
+        - env:
+          - name: NODE_OPTIONS
+            value: --max-old-space-size=256
+          image: nodered/node-red:latest
+          imagePullPolicy: IfNotPresent
+          name: node-red
+          ports:
+          - containerPort: 1880
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 1880
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: nodered-data
+        dnsPolicy: ClusterFirst
+        initContainers:
+        - args:
+          - |
+            cp /config/flows.json /data/flows.json
+            cp /config/settings.js /data/settings.js
+            chown -R 1000:1000 /data
+            echo "mMTC Node-RED config initialized"
+          command:
+          - /bin/sh
+          - -c
+          image: alpine:3.18
+          imagePullPolicy: IfNotPresent
+          name: flows-init
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
+            requests:
+              cpu: 50m
+              memory: 32Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: nodered-config
+          - mountPath: /data
+            name: nodered-data
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: mmtc-nodered-config
+          name: nodered-config
+        - emptyDir: {}
+          name: nodered-data
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-05-01T08:00:17Z"
+      lastUpdateTime: "2026-05-01T08:09:29Z"
+      message: ReplicaSet "mmtc-nodered-856f6c4488" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-07-02T14:26:23Z"
+      lastUpdateTime: "2026-07-02T14:26:23Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 3
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "6"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"upf-mmtc","slice":"mmtc"},"name":"upf-mmtc","namespace":"mmtc"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"upf-mmtc"}},"template":{"metadata":{"labels":{"app":"upf-mmtc","slice":"mmtc"}},"spec":{"containers":[{"env":[{"name":"TUN_DEV","value":"ogstun-mmtc"},{"name":"UE_SUBNET","value":"10.47.0.0/24"},{"name":"UE_GATEWAY","value":"10.47.0.1/24"},{"name":"UPF_CONFIG","value":"/config/upf-mmtc.yaml"},{"name":"TC_RATE","value":"1mbit"},{"name":"TC_CEIL","value":"5mbit"}],"image":"192.168.49.174:5000/open5gs-upf:local","imagePullPolicy":"IfNotPresent","name":"upf","resources":{"limits":{"cpu":"300m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"64Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN","SYS_ADMIN"]},"privileged":true},"volumeMounts":[{"mountPath":"/config","name":"config"},{"mountPath":"/dev/net/tun","name":"dev-net-tun"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"configMap":{"name":"upf-mmtc-config"},"name":"config"},{"hostPath":{"path":"/dev/net/tun","type":"CharDevice"},"name":"dev-net-tun"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 8
+    labels:
+      app: upf-mmtc
+      slice: mmtc
+    name: upf-mmtc
+    namespace: mmtc
+    resourceVersion: "8690878"
+    uid: 9fe8073d-4ce4-448e-a7d7-e7a38e6d0063
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: upf-mmtc
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-06-03T15:42:22+05:30"
+        creationTimestamp: null
+        labels:
+          app: upf-mmtc
+          slice: mmtc
+      spec:
+        containers:
+        - env:
+          - name: TUN_DEV
+            value: ogstun-mmtc
+          - name: UE_SUBNET
+            value: 10.47.0.0/24
+          - name: UE_GATEWAY
+            value: 10.47.0.1/24
+          - name: UPF_CONFIG
+            value: /config/upf-mmtc.yaml
+          - name: TC_RATE
+            value: 1mbit
+          - name: TC_CEIL
+            value: 5mbit
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          name: upf
+          resources:
+            limits:
+              cpu: 300m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+              - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: config
+          - mountPath: /dev/net/tun
+            name: dev-net-tun
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: upf-mmtc-config
+          name: config
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: dev-net-tun
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-05-26T11:45:47Z"
+      lastUpdateTime: "2026-06-03T10:12:23Z"
+      message: ReplicaSet "upf-mmtc-8549b975ff" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-07-02T14:25:46Z"
+      lastUpdateTime: "2026-07-02T14:25:46Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 8
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"upf-mmtc-node2","slice":"mmtc"},"name":"upf-mmtc-node2","namespace":"mmtc"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"upf-mmtc-node2"}},"template":{"metadata":{"labels":{"app":"upf-mmtc-node2","slice":"mmtc"}},"spec":{"containers":[{"env":[{"name":"TUN_DEV","value":"ogstun-mmtc"},{"name":"UE_SUBNET","value":"10.47.0.0/24"},{"name":"UE_GATEWAY","value":"10.47.0.1/24"},{"name":"UPF_CONFIG","value":"/config/upf-mmtc.yaml"},{"name":"TC_RATE","value":"1mbit"},{"name":"TC_CEIL","value":"5mbit"}],"image":"192.168.49.174:5000/open5gs-upf:local","imagePullPolicy":"IfNotPresent","name":"upf","resources":{"limits":{"cpu":"300m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"64Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN","SYS_ADMIN"]},"privileged":true},"volumeMounts":[{"mountPath":"/config","name":"config"},{"mountPath":"/dev/net/tun","name":"dev-net-tun"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kube2"},"volumes":[{"configMap":{"name":"upf-mmtc-node2-config"},"name":"config"},{"hostPath":{"path":"/dev/net/tun","type":"CharDevice"},"name":"dev-net-tun"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 1
+    labels:
+      app: upf-mmtc-node2
+      slice: mmtc
+    name: upf-mmtc-node2
+    namespace: mmtc
+    resourceVersion: "6392302"
+    uid: 85c3043d-72df-4ce7-bd4b-f02ac1643d16
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: upf-mmtc-node2
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: upf-mmtc-node2
+          slice: mmtc
+      spec:
+        containers:
+        - env:
+          - name: TUN_DEV
+            value: ogstun-mmtc
+          - name: UE_SUBNET
+            value: 10.47.0.0/24
+          - name: UE_GATEWAY
+            value: 10.47.0.1/24
+          - name: UPF_CONFIG
+            value: /config/upf-mmtc.yaml
+          - name: TC_RATE
+            value: 1mbit
+          - name: TC_CEIL
+            value: 5mbit
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          name: upf
+          resources:
+            limits:
+              cpu: 300m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+              - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: config
+          - mountPath: /dev/net/tun
+            name: dev-net-tun
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kube2
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: upf-mmtc-node2-config
+          name: config
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: dev-net-tun
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-12T06:41:36Z"
+      lastUpdateTime: "2026-04-12T06:41:37Z"
+      message: ReplicaSet "upf-mmtc-node2-7568565d7d" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-06-03T09:46:31Z"
+      lastUpdateTime: "2026-06-03T09:46:31Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    observedGeneration: 1
+    replicas: 1
+    unavailableReplicas: 1
+    updatedReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""

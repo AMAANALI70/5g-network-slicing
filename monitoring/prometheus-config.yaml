@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+
+    scrape_configs:
+
+      # Node-level TUN metrics (worker1 — ogstun interface stats)
+      - job_name: 'tun-metrics'
+        static_configs:
+          - targets: ['192.168.49.172:9100']
+            labels:
+              instance: 'kube-worker1'
+
+      # QoS Orchestrator (rule-based or agentic, same port)
+      - job_name: 'qos-orchestrator'
+        scrape_interval: 5s
+        static_configs:
+          - targets: ['192.168.49.174:9200']
+            labels:
+              instance: 'orchestrator'
+
+      # eMBB App — nginx stub_status
+      - job_name: 'embb-nginx'
+        scrape_interval: 5s
+        metrics_path: /status
+        static_configs:
+          - targets: ['192.168.49.172:30880']
+            labels:
+              slice: 'embb'
+              app: 'nginx'
+
+      # cAdvisor metrics (master + worker1 only)
+      - job_name: 'kubelet-cadvisor'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/cadvisor
+        static_configs:
+          - targets:
+              - '192.168.49.174:10250'
+              - '192.168.49.172:10250'
+
+      # kubelet resource metrics (master + worker1 only)
+      - job_name: 'kubelet-resource'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/resource
+        static_configs:
+          - targets:
+              - '192.168.49.174:10250'
+              - '192.168.49.172:10250'

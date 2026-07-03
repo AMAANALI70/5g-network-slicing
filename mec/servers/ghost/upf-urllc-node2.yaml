@@ -1,0 +1,104 @@
+---
+# ============================================================
+# URLLC UPF — Node 2 (kube2 / 192.168.49.182) ConfigMap
+# Uses secondary IP to avoid GTP-U port conflict with eMBB
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-urllc-node2-config
+  namespace: urllc
+data:
+  upf-urllc.yaml: |
+    logger:
+      file:
+        path: /var/log/open5gs/upf-urllc-node2.log
+      level: info
+    global:
+      max:
+        ue: 1024
+    upf:
+      pfcp:
+        server:
+          - address: 192.168.49.182
+            port: 8806
+      gtpu:
+        server:
+          - address: 192.168.49.182
+            port: 2152
+      session:
+        - subnet: 10.46.0.0/24
+          gateway: 10.46.0.1
+          dev: ogstun-urllc
+          dnn: urllc
+
+---
+# ============================================================
+# URLLC UPF — Node 2 Deployment (pinned to kube2)
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf-urllc-node2
+  namespace: urllc
+  labels:
+    app: upf-urllc-node2
+    slice: urllc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upf-urllc-node2
+  template:
+    metadata:
+      labels:
+        app: upf-urllc-node2
+        slice: urllc
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: kube2
+      containers:
+        - name: upf
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]
+          env:
+            - name: TUN_DEV
+              value: "ogstun-urllc"
+            - name: UE_SUBNET
+              value: "10.46.0.0/24"
+            - name: UE_GATEWAY
+              value: "10.46.0.1/24"
+            - name: UPF_CONFIG
+              value: "/config/upf-urllc.yaml"
+            - name: TC_RATE
+              value: "50mbit"
+            - name: TC_CEIL
+              value: "50mbit"
+            - name: TC_LATENCY
+              value: "1ms"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: config
+          configMap:
+            name: upf-urllc-node2-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice

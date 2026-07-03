@@ -1,0 +1,255 @@
+---
+# ============================================================
+# Grafana — QoS Orchestrator Dashboard ConfigMap
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-orchestrator-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "true"
+data:
+  qos-orchestrator.json: |
+    {
+      "annotations": { "list": [] },
+      "description": "QoS Orchestrator — Autonomous 5G Slice Management",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "title": "🎛️ eMBB Current Rate (Mbit)",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Mbits",
+              "min": 0,
+              "max": 100,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 20 },
+                  { "color": "green", "value": 60 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_embb_rate_mbit", "legendFormat": "Rate", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "🏎️ URLLC RTT (ms) vs SLA",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 10, "x": 6, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ms",
+              "custom": { "lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#F2CC0C" },
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "red", "value": 5 }
+                ]
+              },
+              "custom.thresholdsStyle": { "mode": "line" }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_urllc_rtt_ms", "legendFormat": "RTT p99", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📊 Violation Count",
+          "type": "stat",
+          "gridPos": { "h": 3, "w": 4, "x": 16, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "thresholds": {
+                "steps": [
+                  { "color": "green", "value": null },
+                  { "color": "yellow", "value": 2 },
+                  { "color": "red", "value": 5 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_violation_count", "legendFormat": "Violations", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "🛡️ Stability (sec)",
+          "type": "stat",
+          "gridPos": { "h": 3, "w": 4, "x": 20, "y": 0 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 30 },
+                  { "color": "green", "value": 60 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_stability_seconds", "legendFormat": "Stable", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "⚠️ Oscillation Flag",
+          "type": "stat",
+          "gridPos": { "h": 3, "w": 4, "x": 16, "y": 3 },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "options": { "0": { "text": "STABLE", "color": "green" } }, "type": "value" },
+                { "options": { "1": { "text": "OSCILLATING", "color": "red" } }, "type": "value" }
+              ]
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_oscillation", "legendFormat": "", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "🔥 Confidence Score",
+          "type": "gauge",
+          "gridPos": { "h": 3, "w": 4, "x": 20, "y": 3 },
+          "fieldConfig": {
+            "defaults": {
+              "min": 0,
+              "max": 1,
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 0.5 },
+                  { "color": "green", "value": 0.8 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_last_confidence", "legendFormat": "", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📈 eMBB Rate Over Time",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 6 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Mbits",
+              "min": 0,
+              "max": 110,
+              "custom": { "lineWidth": 3, "fillOpacity": 20, "gradientMode": "scheme", "showPoints": "never", "staircase": true },
+              "color": { "mode": "fixed", "fixedColor": "#73BF69" }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_embb_rate_mbit", "legendFormat": "eMBB Rate", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "🔧 Throttle / Restore Actions",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 12, "y": 6 },
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "always", "pointSize": 8, "staircase": true }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "Throttle" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Restore" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] }
+            ]
+          },
+          "targets": [
+            { "expr": "orchestrator_throttle_total", "legendFormat": "Throttle", "refId": "A" },
+            { "expr": "orchestrator_restore_total", "legendFormat": "Restore", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📊 eMBB Throughput (actual)",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 12, "x": 0, "y": 12 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "lineWidth": 2, "fillOpacity": 15, "gradientMode": "scheme", "showPoints": "never" },
+              "color": { "mode": "fixed", "fixedColor": "#73BF69" }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_embb_throughput_bps", "legendFormat": "Throughput", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "📦 mMTC PDR",
+          "type": "gauge",
+          "gridPos": { "h": 6, "w": 6, "x": 12, "y": 12 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percentunit",
+              "min": 0.95,
+              "max": 1.0,
+              "decimals": 3,
+              "thresholds": {
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "yellow", "value": 0.99 },
+                  { "color": "green", "value": 0.995 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            { "expr": "orchestrator_mmtc_pdr", "legendFormat": "PDR", "refId": "A" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        },
+        {
+          "title": "💻 CPU / Drops",
+          "type": "timeseries",
+          "gridPos": { "h": 6, "w": 6, "x": 18, "y": 12 },
+          "fieldConfig": {
+            "defaults": {
+              "custom": { "lineWidth": 2, "fillOpacity": 10, "showPoints": "never" }
+            },
+            "overrides": [
+              { "matcher": { "id": "byName", "options": "CPU %" }, "properties": [{ "id": "unit", "value": "percent" }, { "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+              { "matcher": { "id": "byName", "options": "Drops" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+            ]
+          },
+          "targets": [
+            { "expr": "orchestrator_cpu_usage", "legendFormat": "CPU %", "refId": "A" },
+            { "expr": "orchestrator_total_drops", "legendFormat": "Drops", "refId": "B" }
+          ],
+          "datasource": { "type": "prometheus", "uid": "" }
+        }
+      ],
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["qos", "orchestrator", "5g"],
+      "templating": { "list": [] },
+      "time": { "from": "now-15m", "to": "now" },
+      "refresh": "5s",
+      "title": "QoS Orchestrator"
+    }

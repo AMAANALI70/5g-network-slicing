@@ -1,0 +1,196 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-orchestrator-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "true"
+data:
+  qos-orchestrator.json: |
+    {
+      "description": "QoS Orchestrator — Autonomous SLA Recovery: contention detected → eMBB throttled → URLLC recovered → eMBB restored",
+      "editable": true,
+      "graphTooltip": 1,
+      "panels": [
+
+        {"type":"row","title":"▶ ORCHESTRATOR CONTROL LOOP","gridPos":{"h":1,"w":24,"x":0,"y":0},"collapsed":false},
+
+        {"title":"Loop Count","type":"stat","gridPos":{"h":4,"w":3,"x":0,"y":1},
+         "options":{"colorMode":"background","graphMode":"area","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"color":{"fixedColor":"#5794F2","mode":"fixed"}}},
+         "targets":[{"expr":"orchestrator_loop_count","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"SLA Violations","type":"stat","gridPos":{"h":4,"w":3,"x":3,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[
+           {"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":3}]}}},
+         "targets":[{"expr":"orchestrator_violation_count","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Throttle Events","type":"stat","gridPos":{"h":4,"w":3,"x":6,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"color":{"fixedColor":"#FF6B6B","mode":"fixed"}}},
+         "targets":[{"expr":"orchestrator_throttle_total","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Restore Events","type":"stat","gridPos":{"h":4,"w":3,"x":9,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"color":{"fixedColor":"#73BF69","mode":"fixed"}}},
+         "targets":[{"expr":"orchestrator_restore_total","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Recovery Streak","type":"stat","gridPos":{"h":4,"w":3,"x":12,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[
+           {"color":"red","value":null},{"color":"yellow","value":2},{"color":"green","value":5}]}}},
+         "targets":[{"expr":"orchestrator_recovery_streak","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"State","type":"stat","gridPos":{"h":4,"w":3,"x":15,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"mappings":[{"type":"value","options":{
+           "0":{"text":"NORMAL","color":"green"},"1":{"text":"THROTTLED","color":"red"}}}]}},
+         "targets":[{"expr":"orchestrator_state","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"URLLC RTT","type":"stat","gridPos":{"h":4,"w":3,"x":18,"y":1},
+         "options":{"colorMode":"background","graphMode":"area","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"unit":"ms","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":12},{"color":"red","value":15}]}}},
+         "targets":[{"expr":"orchestrator_urllc_rtt_ms","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"eMBB Rate Cap","type":"stat","gridPos":{"h":4,"w":3,"x":21,"y":1},
+         "options":{"colorMode":"background","reduceOptions":{"calcs":["lastNotNull"]}},
+         "fieldConfig":{"defaults":{"unit":"Mbits","color":{"mode":"thresholds"},
+           "thresholds":{"steps":[{"color":"red","value":null},{"color":"yellow","value":50},{"color":"green","value":999}]}},
+           "overrides":[]},
+         "targets":[{"expr":"orchestrator_embb_rate_mbit","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ THE CONTENTION STORY","gridPos":{"h":1,"w":24,"x":0,"y":5},"collapsed":false},
+
+        {"title":"Full Contention Lifecycle — eMBB Load · URLLC RTT · tc Rate Cap · Orchestrator State",
+         "description":"The complete autonomous QoS story on one panel. Blue=eMBB throughput. Red=URLLC RTT (right axis). Orange step=tc bandwidth cap. Bars=THROTTLED periods.",
+         "type":"timeseries","gridPos":{"h":11,"w":24,"x":0,"y":6},
+         "fieldConfig":{"defaults":{"custom":{"lineWidth":2,"fillOpacity":6,"gradientMode":"none","showPoints":"never"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"eMBB Throughput (Mbps)"},"properties":[
+               {"id":"unit","value":"Mbits"},{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}},
+               {"id":"custom.axisPlacement","value":"left"},{"id":"custom.fillOpacity","value":15}]},
+             {"matcher":{"id":"byName","options":"URLLC RTT (ms)"},"properties":[
+               {"id":"unit","value":"ms"},{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}},
+               {"id":"custom.axisPlacement","value":"right"},{"id":"custom.lineWidth","value":3}]},
+             {"matcher":{"id":"byName","options":"SLA Limit (ms)"},"properties":[
+               {"id":"unit","value":"ms"},{"id":"color","value":{"fixedColor":"rgba(255,100,100,0.5)","mode":"fixed"}},
+               {"id":"custom.axisPlacement","value":"right"},
+               {"id":"custom.lineStyle","value":{"fill":"dash","dash":[6,4]}},
+               {"id":"custom.lineWidth","value":1},{"id":"custom.fillOpacity","value":0}]},
+             {"matcher":{"id":"byName","options":"tc Rate Cap (Mbit)"},"properties":[
+               {"id":"unit","value":"Mbits"},{"id":"color","value":{"fixedColor":"#FF9830","mode":"fixed"}},
+               {"id":"custom.axisPlacement","value":"left"},
+               {"id":"custom.lineWidth","value":3},{"id":"custom.fillOpacity","value":0},
+               {"id":"custom.staircase","value":true}]},
+             {"matcher":{"id":"byName","options":"Throttled"},"properties":[
+               {"id":"unit","value":"short"},{"id":"color","value":{"fixedColor":"rgba(255,50,50,0.12)","mode":"fixed"}},
+               {"id":"custom.axisPlacement","value":"hidden"},
+               {"id":"custom.drawStyle","value":"bars"},{"id":"custom.fillOpacity","value":50},
+               {"id":"custom.lineWidth","value":0},{"id":"custom.barAlignment","value":0}]}
+           ]},
+         "targets":[
+           {"expr":"orchestrator_embb_mbps","legendFormat":"eMBB Throughput (Mbps)","refId":"A"},
+           {"expr":"orchestrator_urllc_rtt_ms","legendFormat":"URLLC RTT (ms)","refId":"B"},
+           {"expr":"vector(15)","legendFormat":"SLA Limit (ms)","refId":"C"},
+           {"expr":"orchestrator_embb_rate_mbit","legendFormat":"tc Rate Cap (Mbit)","refId":"D"},
+           {"expr":"orchestrator_state * 30","legendFormat":"Throttled","refId":"E"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ ORCHESTRATION ACTIONS","gridPos":{"h":1,"w":24,"x":0,"y":17},"collapsed":false},
+
+        {"title":"eMBB Rate Cap — Staircase","description":"Shows eMBB tc TBF cap over time. Throttle applies TBF rate limit; restore removes cap (returns to fq_codel default).",
+         "type":"timeseries","gridPos":{"h":8,"w":12,"x":0,"y":18},
+         "fieldConfig":{"defaults":{"unit":"Mbits","min":0,"custom":{
+           "lineWidth":3,"fillOpacity":25,"gradientMode":"scheme","showPoints":"always","pointSize":6,"staircase":true},
+           "color":{"fixedColor":"#FF9830","mode":"fixed"},
+           "thresholds":{"steps":[{"color":"red","value":null},{"color":"yellow","value":50},{"color":"green","value":999}]}}},
+         "targets":[{"expr":"orchestrator_embb_rate_mbit","legendFormat":"Rate Cap (Mbit)","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Cumulative Throttle & Restore Actions",
+         "type":"timeseries","gridPos":{"h":8,"w":12,"x":12,"y":18},
+         "fieldConfig":{"defaults":{"custom":{"lineWidth":2,"fillOpacity":10,"staircase":true,"showPoints":"always","pointSize":6}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"Throttle"},"properties":[
+               {"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}},{"id":"unit","value":"short"}]},
+             {"matcher":{"id":"byName","options":"Restore"},"properties":[
+               {"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}},{"id":"unit","value":"short"}]}]},
+         "targets":[
+           {"expr":"orchestrator_throttle_total","legendFormat":"Throttle","refId":"A"},
+           {"expr":"orchestrator_restore_total","legendFormat":"Restore","refId":"B"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ SLA TRACKING & RECOVERY","gridPos":{"h":1,"w":24,"x":0,"y":26},"collapsed":false},
+
+        {"title":"URLLC RTT vs SLA — Recovery Curve","description":"How long recovery takes after throttle is applied. SLA restored when RTT drops below 15ms line.",
+         "type":"timeseries","gridPos":{"h":9,"w":16,"x":0,"y":27},
+         "fieldConfig":{"defaults":{"unit":"ms","custom":{"lineWidth":3,"fillOpacity":15,"gradientMode":"scheme","showPoints":"never",
+           "thresholdsStyle":{"mode":"line"}},
+           "color":{"fixedColor":"#FF6B6B","mode":"fixed"},
+           "thresholds":{"steps":[{"color":"green","value":null},{"color":"red","value":25}]}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"SLA Limit"},"properties":[
+               {"id":"color","value":{"fixedColor":"rgba(255,100,100,0.5)","mode":"fixed"}},
+               {"id":"custom.lineWidth","value":1},{"id":"custom.lineStyle","value":{"fill":"dash","dash":[8,4]}},
+               {"id":"custom.fillOpacity","value":0}]}]},
+         "targets":[
+           {"expr":"orchestrator_urllc_rtt_ms","legendFormat":"URLLC RTT","refId":"A"},
+           {"expr":"vector(15)","legendFormat":"SLA Limit","refId":"B"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"mMTC Continuity","type":"timeseries","gridPos":{"h":9,"w":8,"x":16,"y":27},
+         "description":"mMTC MQTT messages keep publishing through contention — validates slice isolation.",
+         "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2,"fillOpacity":20,"gradientMode":"scheme"},
+           "color":{"fixedColor":"#73BF69","mode":"fixed"}}},
+         "targets":[{"expr":"orchestrator_mmtc_msgs_total","legendFormat":"MQTT Messages (cumulative)","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"type":"row","title":"▶ UPF INFRASTRUCTURE","gridPos":{"h":1,"w":24,"x":0,"y":36},"collapsed":false},
+
+        {"title":"Per-Slice UPF Throughput","type":"timeseries","gridPos":{"h":7,"w":12,"x":0,"y":37},
+         "fieldConfig":{"defaults":{"unit":"Bps","custom":{"lineWidth":2,"fillOpacity":12,"gradientMode":"scheme","showPoints":"never"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"eMBB"},"properties":[{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"URLLC"},"properties":[{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"mMTC"},"properties":[{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]}]},
+         "targets":[
+           {"expr":"rate(tun_rx_bytes{slice=\"embb\"}[30s])","legendFormat":"eMBB","refId":"A"},
+           {"expr":"rate(tun_rx_bytes{slice=\"urllc\"}[30s])","legendFormat":"URLLC","refId":"B"},
+           {"expr":"rate(tun_rx_bytes{slice=\"mmtc\"}[30s])","legendFormat":"mMTC","refId":"C"}
+         ],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},
+
+        {"title":"Namespace CPU Usage","type":"timeseries","gridPos":{"h":7,"w":12,"x":12,"y":37},
+         "fieldConfig":{"defaults":{"unit":"short","custom":{"lineWidth":2,"fillOpacity":12,"gradientMode":"scheme","showPoints":"never"}},
+           "overrides":[
+             {"matcher":{"id":"byName","options":"embb"},"properties":[{"id":"color","value":{"fixedColor":"#5794F2","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"urllc"},"properties":[{"id":"color","value":{"fixedColor":"#FF6B6B","mode":"fixed"}}]},
+             {"matcher":{"id":"byName","options":"mmtc"},"properties":[{"id":"color","value":{"fixedColor":"#73BF69","mode":"fixed"}}]}]},
+         "targets":[{"expr":"sum by(namespace)(rate(container_cpu_usage_seconds_total{namespace=~\"embb|urllc|mmtc\"}[1m]))","legendFormat":"{{namespace}}","refId":"A"}],
+         "datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}}
+
+      ,{"type":"row","title":"▶ LLM & AGENTIC CONTROL","gridPos":{"h":1,"w":24,"x":0,"y":46},"collapsed":false},{"title":"Agentic Mode","type":"stat","gridPos":{"h":4,"w":3,"x":0,"y":47},"fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"blue","value":null},{"color":"green","value":1}]}}},"options":{"reduceOptions":{"calcs":["lastNotNull"]},"textMode":"value"},"targets":[{"expr":"orchestrator_agentic_mode","refId":"A"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},{"title":"LLM Latency","type":"stat","gridPos":{"h":4,"w":3,"x":3,"y":47},"fieldConfig":{"defaults":{"unit":"ms","color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":30000},{"color":"red","value":60000}]}}},"options":{"reduceOptions":{"calcs":["lastNotNull"]}},"targets":[{"expr":"orchestrator_llm_latency_ms","refId":"A"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},{"title":"LLM Confidence","type":"gauge","gridPos":{"h":4,"w":3,"x":6,"y":47},"fieldConfig":{"defaults":{"unit":"percentunit","min":0,"max":1,"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"yellow","value":0.6},{"color":"green","value":0.8}]}}},"options":{"reduceOptions":{"calcs":["lastNotNull"]}},"targets":[{"expr":"orchestrator_llm_confidence","refId":"A"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},{"title":"Memory Success","type":"gauge","gridPos":{"h":4,"w":3,"x":9,"y":47},"fieldConfig":{"defaults":{"unit":"percentunit","min":0,"max":1,"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"yellow","value":0.5},{"color":"green","value":0.75}]}}},"options":{"reduceOptions":{"calcs":["lastNotNull"]}},"targets":[{"expr":"orchestrator_memory_success_rate","refId":"A"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},{"title":"Safety Overrides","type":"stat","gridPos":{"h":4,"w":3,"x":12,"y":47},"fieldConfig":{"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":1},{"color":"red","value":5}]}}},"options":{"reduceOptions":{"calcs":["lastNotNull"]}},"targets":[{"expr":"orchestrator_safety_overrides_total","refId":"A"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},{"title":"LLM Latency Timeline","type":"timeseries","gridPos":{"h":7,"w":12,"x":0,"y":51},"fieldConfig":{"defaults":{"unit":"ms"}},"targets":[{"expr":"orchestrator_llm_latency_ms","legendFormat":"LLM Latency (ms)","refId":"A"},{"expr":"orchestrator_llm_confidence * 10000","legendFormat":"Confidence × 10k","refId":"B"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}},{"title":"Slice Replicas","type":"timeseries","gridPos":{"h":7,"w":12,"x":12,"y":51},"fieldConfig":{"defaults":{"unit":"short","decimals":0}},"targets":[{"expr":"orchestrator_embb_replicas","legendFormat":"eMBB replicas","refId":"A"},{"expr":"orchestrator_urllc_replicas","legendFormat":"URLLC replicas","refId":"B"},{"expr":"orchestrator_mmtc_replicas","legendFormat":"mMTC replicas","refId":"C"}],"datasource":{"type":"prometheus","uid":"PBFA97CFB590B2093"}}],
+      "refresh": "5s",
+      "schemaVersion": 39,
+      "style": "dark",
+      "tags": ["qos","orchestrator","5g","autonomous","sla","recovery"],
+      "time": {"from":"now-30m","to":"now"},
+      "timezone": "browser",
+      "title": "QoS Orchestrator — Autonomous Control Loop",
+      "uid": "qos-orch-v3",
+      "version": 3
+    }

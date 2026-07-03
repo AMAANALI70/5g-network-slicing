@@ -1,0 +1,248 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIDBTCCAe2gAwIBAgIIAs2gaY8mJ7MwDQYJKoZIhvcNAQELBQAwFTETMBEGA1UE
+      AxMKa3ViZXJuZXRlczAeFw0yNjA0MTIwNTQ5NTZaFw0zNjA0MDkwNTU0NTZaMBUx
+      EzARBgNVBAMTCmt1YmVybmV0ZXMwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEK
+      AoIBAQDVzxM0KG4jz2D2jqwcslibvAUB5UnFCp6NKAdMc/KMx+kvMwYKvfqpLuQA
+      gW+L+iaVpbvwPOsVF33LdHIzfOlgYPKljGiM2LEwu5RhZps6GouSjP8NnnS5A0Dc
+      6KR5G240ZB+Zfe3BcruV8PYuviAQdPWIbFwLJ1v1A5GmAqnjWPppSkdnnTS0g0rv
+      kWiv3TO6ypoP90V4V+rnAIhnr3GhHyJwOfwZV/rJ28N8reeBu+KPAma4KQiG4dOL
+      cw+WJSOHSogJ27Y21s6BHTwWjrppiqPbES+EklRDb7/feow/ISh/bzNMZmV4xoeW
+      /9Lvc3KQRuO8phlkWt53oExymLWrAgMBAAGjWTBXMA4GA1UdDwEB/wQEAwICpDAP
+      BgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRSsNXBE3/RvxgADDNnAuYRAptE+TAV
+      BgNVHREEDjAMggprdWJlcm5ldGVzMA0GCSqGSIb3DQEBCwUAA4IBAQB4aH/w4GvW
+      h3pOI1S0VrDkUEj7wASU36a7cDOppw9OktkuLAzslpBeOge09yqCo1paSncWjGHl
+      hq/S4kzo9Ww8Emjgupsu8UXnC6Xj4AzhoqlRsm3V1BAHE9l8rQj2Lv0BX+QcCdRz
+      AxxSoq/rTFL8mJuvgiI+4WIvU153uHQQcW+qsEKZAa6/AZKkuOgTGBQJdU+is8qd
+      k5RtnjY7D9zlH3AsNphHxqSn2sCmqj4WrALqrf0bHKKQwwGmVOcDIlsJt1kOpZ+C
+      MG9l+cDDWqB8//fmV7PN2zaQoR1kCGW+B5lPF48R1NiBoFLNAKjYamjjc7xxAvrI
+      969sRYkvXnLV
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-04-12T06:41:34Z"
+    name: kube-root-ca.crt
+    namespace: urllc
+    resourceVersion: "4588"
+    uid: c251409c-84c0-474f-961c-75082fa3dc78
+- apiVersion: v1
+  data:
+    upf-urllc.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-urllc.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.172
+              port: 8806
+        gtpu:
+          server:
+            - address: 192.168.49.171
+              port: 2152
+        session:
+          - subnet: 10.46.0.0/24
+            gateway: 10.46.0.1
+            dev: ogstun-urllc
+            dnn: urllc
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf-urllc.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-urllc.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.172\n        port: 8806\n  gtpu:\n    server:\n      - address: 192.168.49.171\n        port: 2152\n  session:\n    - subnet: 10.46.0.0/24\n      gateway: 10.46.0.1\n      dev: ogstun-urllc\n      dnn: urllc\n"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":"2026-04-12T06:41:36Z","name":"upf-urllc-config","namespace":"urllc","resourceVersion":"4332569","uid":"920e1e02-921c-4b97-be92-b49ff9cd26a6"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-urllc-config
+    namespace: urllc
+    resourceVersion: "4335241"
+    uid: 920e1e02-921c-4b97-be92-b49ff9cd26a6
+- apiVersion: v1
+  data:
+    upf-urllc.yaml: |
+      logger:
+        file:
+          path: /var/log/open5gs/upf-urllc-node2.log
+        level: info
+      global:
+        max:
+          ue: 1024
+      upf:
+        pfcp:
+          server:
+            - address: 192.168.49.182
+              port: 8806
+        gtpu:
+          server:
+            - address: 192.168.49.182
+              port: 2152
+        session:
+          - subnet: 10.46.0.0/24
+            gateway: 10.46.0.1
+            dev: ogstun-urllc
+            dnn: urllc
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"upf-urllc.yaml":"logger:\n  file:\n    path: /var/log/open5gs/upf-urllc-node2.log\n  level: info\nglobal:\n  max:\n    ue: 1024\nupf:\n  pfcp:\n    server:\n      - address: 192.168.49.182\n        port: 8806\n  gtpu:\n    server:\n      - address: 192.168.49.182\n        port: 2152\n  session:\n    - subnet: 10.46.0.0/24\n      gateway: 10.46.0.1\n      dev: ogstun-urllc\n      dnn: urllc\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"upf-urllc-node2-config","namespace":"urllc"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: upf-urllc-node2-config
+    namespace: urllc
+    resourceVersion: "4758"
+    uid: 09118386-155d-4d48-94b7-c99e27aa7806
+- apiVersion: v1
+  data:
+    flows.json: |
+      [
+        {
+          "id": "flow-urllc-main",
+          "type": "tab",
+          "label": "URLLC Telemetry",
+          "disabled": false
+        },
+        {
+          "id": "ws-server-config",
+          "type": "websocket-listener",
+          "path": "/ws/telemetry",
+          "wholemsg": "false"
+        },
+        {
+          "id": "ws-in",
+          "type": "websocket in",
+          "z": "flow-urllc-main",
+          "name": "Telemetry Input",
+          "server": "ws-server-config",
+          "client": "",
+          "x": 140,
+          "y": 120,
+          "wires": [["msg-parse"]]
+        },
+        {
+          "id": "msg-parse",
+          "type": "function",
+          "z": "flow-urllc-main",
+          "name": "Parse + Control Response",
+          "func": "try {\n  var d = JSON.parse(msg.payload);\n  var now = Date.now();\n  // Generate realistic control command based on telemetry\n  var cmd = 'HOLD';\n  if (d.spindle_rpm > 3040) cmd = 'REDUCE_SPEED';\n  else if (d.spindle_rpm < 2960) cmd = 'INCREASE_SPEED';\n  if (d.vibration_x && Math.abs(d.vibration_x) > 0.03) cmd = 'EMERGENCY_STOP';\n  msg.payload = JSON.stringify({\n    control_cmd: cmd,\n    server_ts: now,\n    client_ts: d.timestamp_ns,\n    machine_id: d.machine_id || 'unknown',\n    status: 'OK'\n  });\n} catch(e) {\n  msg.payload = JSON.stringify({control_cmd:'HOLD', status:'PARSE_ERROR'});\n}\nreturn msg;",
+          "outputs": 1,
+          "x": 370,
+          "y": 120,
+          "wires": [["ws-out", "debug-out"]]
+        },
+        {
+          "id": "ws-out",
+          "type": "websocket out",
+          "z": "flow-urllc-main",
+          "name": "Control Response",
+          "server": "ws-server-config",
+          "client": "",
+          "x": 630,
+          "y": 100,
+          "wires": []
+        },
+        {
+          "id": "debug-out",
+          "type": "debug",
+          "z": "flow-urllc-main",
+          "name": "Telemetry Log",
+          "active": false,
+          "tosidebar": true,
+          "x": 630,
+          "y": 140,
+          "wires": []
+        },
+        {
+          "id": "http-in",
+          "type": "http in",
+          "z": "flow-urllc-main",
+          "name": "Telemetry POST",
+          "url": "/telemetry",
+          "method": "post",
+          "x": 140,
+          "y": 300,
+          "wires": [["http-parse"]]
+        },
+        {
+          "id": "http-parse",
+          "type": "function",
+          "z": "flow-urllc-main",
+          "name": "HTTP Control Response",
+          "func": "try {\n  var d = (typeof msg.payload === 'string') ? JSON.parse(msg.payload) : msg.payload;\n  var now = Date.now();\n  var cmd = 'HOLD';\n  if (d.spindle_rpm > 3040) cmd = 'REDUCE_SPEED';\n  else if (d.spindle_rpm < 2960) cmd = 'INCREASE_SPEED';\n  if (d.vibration_x && Math.abs(d.vibration_x) > 0.03) cmd = 'EMERGENCY_STOP';\n  msg.payload = {control_cmd: cmd, server_ts: now, machine_id: d.machine_id || 'unknown', status: 'OK'};\n  msg.statusCode = 200;\n} catch(e) {\n  msg.payload = {control_cmd: 'HOLD', status: 'PARSE_ERROR'};\n  msg.statusCode = 200;\n}\nreturn msg;",
+          "outputs": 1,
+          "x": 370,
+          "y": 300,
+          "wires": [["http-response"]]
+        },
+        {
+          "id": "http-response",
+          "type": "http response",
+          "z": "flow-urllc-main",
+          "name": "Send Response",
+          "statusCode": "",
+          "x": 610,
+          "y": 300,
+          "wires": []
+        },
+        {
+          "id": "status-inject",
+          "type": "inject",
+          "z": "flow-urllc-main",
+          "name": "Server Heartbeat",
+          "props": [{"p": "payload"}],
+          "repeat": "5",
+          "payload": "{\"type\":\"heartbeat\",\"server\":\"urllc-edge\",\"slice\":\"urllc\"}",
+          "payloadType": "str",
+          "x": 140,
+          "y": 400,
+          "wires": [["status-debug"]]
+        },
+        {
+          "id": "status-debug",
+          "type": "debug",
+          "z": "flow-urllc-main",
+          "name": "Heartbeat",
+          "active": false,
+          "tosidebar": true,
+          "x": 370,
+          "y": 400,
+          "wires": []
+        }
+      ]
+    settings.js: |
+      module.exports = {
+          uiPort: 1880,
+          flowFile: 'flows.json',
+          userDir: '/data',
+          httpAdminRoot: '/',
+          httpNodeRoot: '/api',
+          logging: {
+              console: { level: "info", metrics: false, audit: false }
+          },
+          editorTheme: {
+              page: { title: "URLLC — 5G Edge Telemetry Hub" }
+          }
+      }
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"flows.json":"[\n  {\n    \"id\": \"flow-urllc-main\",\n    \"type\": \"tab\",\n    \"label\": \"URLLC Telemetry\",\n    \"disabled\": false\n  },\n  {\n    \"id\": \"ws-server-config\",\n    \"type\": \"websocket-listener\",\n    \"path\": \"/ws/telemetry\",\n    \"wholemsg\": \"false\"\n  },\n  {\n    \"id\": \"ws-in\",\n    \"type\": \"websocket in\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Telemetry Input\",\n    \"server\": \"ws-server-config\",\n    \"client\": \"\",\n    \"x\": 140,\n    \"y\": 120,\n    \"wires\": [[\"msg-parse\"]]\n  },\n  {\n    \"id\": \"msg-parse\",\n    \"type\": \"function\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Parse + Control Response\",\n    \"func\": \"try {\\n  var d = JSON.parse(msg.payload);\\n  var now = Date.now();\\n  // Generate realistic control command based on telemetry\\n  var cmd = 'HOLD';\\n  if (d.spindle_rpm \u003e 3040) cmd = 'REDUCE_SPEED';\\n  else if (d.spindle_rpm \u003c 2960) cmd = 'INCREASE_SPEED';\\n  if (d.vibration_x \u0026\u0026 Math.abs(d.vibration_x) \u003e 0.03) cmd = 'EMERGENCY_STOP';\\n  msg.payload = JSON.stringify({\\n    control_cmd: cmd,\\n    server_ts: now,\\n    client_ts: d.timestamp_ns,\\n    machine_id: d.machine_id || 'unknown',\\n    status: 'OK'\\n  });\\n} catch(e) {\\n  msg.payload = JSON.stringify({control_cmd:'HOLD', status:'PARSE_ERROR'});\\n}\\nreturn msg;\",\n    \"outputs\": 1,\n    \"x\": 370,\n    \"y\": 120,\n    \"wires\": [[\"ws-out\", \"debug-out\"]]\n  },\n  {\n    \"id\": \"ws-out\",\n    \"type\": \"websocket out\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Control Response\",\n    \"server\": \"ws-server-config\",\n    \"client\": \"\",\n    \"x\": 630,\n    \"y\": 100,\n    \"wires\": []\n  },\n  {\n    \"id\": \"debug-out\",\n    \"type\": \"debug\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Telemetry Log\",\n    \"active\": false,\n    \"tosidebar\": true,\n    \"x\": 630,\n    \"y\": 140,\n    \"wires\": []\n  },\n  {\n    \"id\": \"http-in\",\n    \"type\": \"http in\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Telemetry POST\",\n    \"url\": \"/telemetry\",\n    \"method\": \"post\",\n    \"x\": 140,\n    \"y\": 300,\n    \"wires\": [[\"http-parse\"]]\n  },\n  {\n    \"id\": \"http-parse\",\n    \"type\": \"function\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"HTTP Control Response\",\n    \"func\": \"try {\\n  var d = (typeof msg.payload === 'string') ? JSON.parse(msg.payload) : msg.payload;\\n  var now = Date.now();\\n  var cmd = 'HOLD';\\n  if (d.spindle_rpm \u003e 3040) cmd = 'REDUCE_SPEED';\\n  else if (d.spindle_rpm \u003c 2960) cmd = 'INCREASE_SPEED';\\n  if (d.vibration_x \u0026\u0026 Math.abs(d.vibration_x) \u003e 0.03) cmd = 'EMERGENCY_STOP';\\n  msg.payload = {control_cmd: cmd, server_ts: now, machine_id: d.machine_id || 'unknown', status: 'OK'};\\n  msg.statusCode = 200;\\n} catch(e) {\\n  msg.payload = {control_cmd: 'HOLD', status: 'PARSE_ERROR'};\\n  msg.statusCode = 200;\\n}\\nreturn msg;\",\n    \"outputs\": 1,\n    \"x\": 370,\n    \"y\": 300,\n    \"wires\": [[\"http-response\"]]\n  },\n  {\n    \"id\": \"http-response\",\n    \"type\": \"http response\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Send Response\",\n    \"statusCode\": \"\",\n    \"x\": 610,\n    \"y\": 300,\n    \"wires\": []\n  },\n  {\n    \"id\": \"status-inject\",\n    \"type\": \"inject\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Server Heartbeat\",\n    \"props\": [{\"p\": \"payload\"}],\n    \"repeat\": \"5\",\n    \"payload\": \"{\\\"type\\\":\\\"heartbeat\\\",\\\"server\\\":\\\"urllc-edge\\\",\\\"slice\\\":\\\"urllc\\\"}\",\n    \"payloadType\": \"str\",\n    \"x\": 140,\n    \"y\": 400,\n    \"wires\": [[\"status-debug\"]]\n  },\n  {\n    \"id\": \"status-debug\",\n    \"type\": \"debug\",\n    \"z\": \"flow-urllc-main\",\n    \"name\": \"Heartbeat\",\n    \"active\": false,\n    \"tosidebar\": true,\n    \"x\": 370,\n    \"y\": 400,\n    \"wires\": []\n  }\n]\n","settings.js":"module.exports = {\n    uiPort: 1880,\n    flowFile: 'flows.json',\n    userDir: '/data',\n    httpAdminRoot: '/',\n    httpNodeRoot: '/api',\n    logging: {\n        console: { level: \"info\", metrics: false, audit: false }\n    },\n    editorTheme: {\n        page: { title: \"URLLC — 5G Edge Telemetry Hub\" }\n    }\n}\n"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"urllc-nodered-config","namespace":"urllc"}}
+    creationTimestamp: "2026-05-01T08:00:17Z"
+    name: urllc-nodered-config
+    namespace: urllc
+    resourceVersion: "2536761"
+    uid: dc904c32-9294-4f3b-a1c2-49d457aacf28
+kind: List
+metadata:
+  resourceVersion: ""

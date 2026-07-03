@@ -1,0 +1,22 @@
+[
+  {
+    "level": "medium",
+    "samples": 196,
+    "urllc_rtt_avg_ms": 13.96,
+    "urllc_rtt_max_ms": 32.23,
+    "urllc_rtt_min_ms": 12.27,
+    "embb_tp_avg_mbps": 67.17,
+    "embb_tp_min_mbps": 0.0,
+    "mmtc_msgs_avg": 934.0,
+    "mmtc_msgs_max": 1890.0,
+    "throttle_actions": 1,
+    "tc_rate_min_mbit": 200.0,
+    "tc_rate_avg_mbit": 572.4,
+    "orchestrator_loops": 38,
+    "sla_violations": 9,
+    "recovery_time_s": 21,
+    "expected_rtt": "<5",
+    "expected_embb": ">15",
+    "expected_pdr": ">99.5%"
+  }
+]

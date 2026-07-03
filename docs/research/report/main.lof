@@ -1,0 +1,42 @@
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Comprehensive Agentic Testbed Architecture, illustrating the physical separation of nodes and the decoupling of the multi-agent control loop from the 5G data plane.\relax }}{8}{figure.caption.8}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Slice Architecture showing complete isolation.\relax }}{8}{figure.caption.9}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces UE Registration \& Slice Selection Flow.\relax }}{9}{figure.caption.10}%
+\contentsline {figure}{\numberline {3.4}{\ignorespaces MEC Traffic Locality with local breakout.\relax }}{9}{figure.caption.11}%
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Kubernetes Deployment Diagram.\relax }}{9}{figure.caption.12}%
+\contentsline {figure}{\numberline {3.6}{\ignorespaces Closed Loop QoS Control.\relax }}{10}{figure.caption.13}%
+\contentsline {figure}{\numberline {3.7}{\ignorespaces \texttt {tc} Enforcement Point.\relax }}{10}{figure.caption.14}%
+\contentsline {figure}{\numberline {3.8}{\ignorespaces Seven-Layer End-to-End System Architecture. Solid arrows denote data-plane flows; dashed arrows denote control and observability flows.\relax }}{11}{figure.caption.15}%
+\contentsline {figure}{\numberline {3.9}{\ignorespaces LangGraph Multi-Agent Orchestration Pipeline (Contribution C2). Each node is a specialised agent; dashed arrows represent cross-cycle feedback.\relax }}{12}{figure.caption.16}%
+\contentsline {figure}{\numberline {3.10}{\ignorespaces Monitoring Agent Architecture (Contribution C4). Three input collectors feed an aggregator; the derived load-fraction metric is written to the thread-safe state cache.\relax }}{12}{figure.caption.17}%
+\contentsline {figure}{\numberline {3.11}{\ignorespaces Planning Agent Architecture (Contributions C3, C5). State and memory are injected into a structured prompt; the LLM generates a mandatory CoT schema.\relax }}{13}{figure.caption.18}%
+\contentsline {figure}{\numberline {3.12}{\ignorespaces Validation Gate Architecture (Contribution C4). Contradiction detection catches logical inconsistencies between the \texttt {root\_cause\_assessment} and the proposed action.\relax }}{13}{figure.caption.19}%
+\contentsline {figure}{\numberline {3.13}{\ignorespaces Orchestrator Control Loop State Machine. WLA = Wrong-Lever Avoidance (C4). The dashed path is structurally impossible in rule-based systems.\relax }}{15}{figure.caption.21}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Rule-Based Workflow.\relax }}{16}{figure.caption.22}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Agentic Workflow.\relax }}{17}{figure.caption.23}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces C3/C4/C5 Framework contributing to action selection.\relax }}{17}{figure.caption.24}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces HTB shaping hierarchy on the UPF egress interface. URLLC carries \texttt {prio\nobreakspace {}1} (strict priority), ensuring URLLC packets skip the queue whenever aggregate utilisation approaches the physical ceiling.\relax }}{23}{figure.caption.27}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Closed-loop orchestrator control flow. Both orchestrator types share the Observe–Validate–Act–Reflect structure. The agentic system additionally invokes the Memory Agent and produces a Chain-of-Thought reasoning trace.\relax }}{24}{figure.caption.29}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Column schema of the six collected datasets (rule-based $\times $ \{low, medium, high\} and agentic $\times $ \{low, medium, high\}). Each row is one 3-second control cycle. The agentic-specific columns (\texttt {root\_cause\_assessment}, \texttt {lever\_validity\_score}, \texttt {wla\_activated}, \texttt {memory\_*}) are populated only in agentic runs; rule-based runs carry equivalent synthetic labels for paired comparison.\relax }}{25}{figure.caption.30}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Experimental campaign matrix: 2 orchestrators $\times $ 3 traffic load levels $\times $ 3 repeated trials = 18 total runs.\relax }}{25}{figure.caption.31}%
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {6.1}{\ignorespaces RTT Distribution (Boxplot).\relax }}{27}{figure.caption.34}%
+\contentsline {figure}{\numberline {6.2}{\ignorespaces URLLC RTT Empirical CDF.\relax }}{28}{figure.caption.35}%
+\contentsline {figure}{\numberline {6.3}{\ignorespaces SLA Violation Rate.\relax }}{28}{figure.caption.36}%
+\contentsline {figure}{\numberline {6.4}{\ignorespaces RTT Heatmap.\relax }}{29}{figure.caption.37}%
+\contentsline {figure}{\numberline {6.5}{\ignorespaces eMBB Throughput Comparison.\relax }}{29}{figure.caption.38}%
+\contentsline {figure}{\numberline {6.6}{\ignorespaces Throttle and Restore Event Count.\relax }}{30}{figure.caption.39}%
+\contentsline {figure}{\numberline {6.7}{\ignorespaces Recovery Time after intervention.\relax }}{30}{figure.caption.40}%
+\contentsline {figure}{\numberline {6.8}{\ignorespaces Root Cause Assessment Categories.\relax }}{31}{figure.caption.41}%
+\contentsline {figure}{\numberline {6.9}{\ignorespaces Lever Validity Distribution.\relax }}{31}{figure.caption.42}%
+\contentsline {figure}{\numberline {6.10}{\ignorespaces Memory Retrievals per run.\relax }}{32}{figure.caption.43}%
+\contentsline {figure}{\numberline {6.11}{\ignorespaces Wrong-Lever Avoidance (WLA) Activations.\relax }}{32}{figure.caption.44}%
+\contentsline {figure}{\numberline {6.12}{\ignorespaces Action Distribution.\relax }}{33}{figure.caption.45}%
+\contentsline {figure}{\numberline {6.13}{\ignorespaces LLM Latency Distribution.\relax }}{33}{figure.caption.46}%
+\contentsline {figure}{\numberline {6.14}{\ignorespaces Token Consumption per load level.\relax }}{34}{figure.caption.47}%
+\contentsline {figure}{\numberline {6.15}{\ignorespaces Tokens per Decision.\relax }}{34}{figure.caption.48}%
+\contentsline {figure}{\numberline {6.16}{\ignorespaces Cost Analysis (Estimated equivalent).\relax }}{35}{figure.caption.49}%

@@ -1,0 +1,40 @@
+# ============================================================
+# 5G Network Slicing Testbed - Aggregated Requirements
+# ============================================================
+# Orchestrator (LangGraph Agentic QoS Orchestrator)
+langgraph>=0.2.0
+langchain-core>=0.3.0
+langchain>=0.3.0
+groq>=0.9.0
+python-dotenv>=1.0.0
+
+# Monitoring & Metrics
+prometheus-client>=0.17.0
+requests>=2.28.0
+
+# Data Processing & ML
+pandas>=1.5.0
+numpy>=1.23.0
+scikit-learn>=1.0.0
+torch>=2.0.0          # TCN models
+matplotlib>=3.5.0
+seaborn>=0.12.0
+
+# Kubernetes Client
+kubernetes>=28.0.0
+
+# MEC Application Clients
+flask>=2.0.0
+paho-mqtt>=1.6.0
+
+# Utilities
+PyYAML>=6.0
+rich>=13.0.0
+tabulate>=0.9.0
+
+# ============================================================
+# Per-component requirements:
+# - orchestrator/requirements.txt      (LangGraph agent core)
+# - mec/clients/requirements.txt       (MEC client libraries)
+# - ml-models/training/requirements.txt (TCN training pipeline)
+# ============================================================

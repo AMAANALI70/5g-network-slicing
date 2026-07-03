@@ -1,0 +1,246 @@
+---
+# ============================================================
+# TUN Interface Metrics Exporter — ConfigMap (Python script)
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tun-exporter-script
+  namespace: monitoring
+data:
+  exporter.py: |
+    #!/usr/bin/env python3
+    """
+    Prometheus exporter for ogstun-* TUN interface statistics AND
+    tc qdisc stats (netem delay, backlog, HTB rate).
+    Reads counters from /sys/class/net/<iface>/statistics/ and
+    tc -s qdisc show, then serves them as Prometheus metrics on port 9100.
+    """
+    import http.server
+    import os
+    import re
+    import subprocess
+
+    PORT = 9100
+
+    # Map interface names to slice labels
+    INTERFACE_MAP = {
+        "ogstun-embb": "embb",
+        "ogstun-urllc": "urllc",
+        "ogstun-mmtc": "mmtc",
+    }
+
+    STATS = [
+        "rx_bytes", "tx_bytes",
+        "rx_packets", "tx_packets",
+        "rx_errors", "tx_errors",
+        "rx_dropped", "tx_dropped",
+    ]
+
+    def read_stat(iface, stat):
+        path = f"/sys/class/net/{iface}/statistics/{stat}"
+        try:
+            with open(path) as f:
+                return int(f.read().strip())
+        except (FileNotFoundError, ValueError):
+            return 0
+
+    def collect_tc_stats(iface, slice_name):
+        """Run tc -s qdisc show dev <iface> and parse netem delay + backlog."""
+        lines = []
+        try:
+            out = subprocess.check_output(
+                ["nsenter", "--target", "1", "--mount", "--",
+                 "tc", "-s", "qdisc", "show", "dev", iface],
+                text=True, timeout=2, stderr=subprocess.DEVNULL,
+            )
+            # Parse netem delay
+            m = re.search(r'delay\s+([\d.]+)(ms|us|s)', out)
+            if m:
+                val, unit = float(m.group(1)), m.group(2)
+                if unit == "us":
+                    val = val / 1000.0
+                elif unit == "s":
+                    val = val * 1000.0
+                lines.append(
+                    f'tc_netem_delay_ms{{interface="{iface}",slice="{slice_name}"}} {val:.2f}'
+                )
+
+            # Parse backlog packets
+            m = re.search(r'backlog\s+\S+\s+(\d+)p', out)
+            if m:
+                lines.append(
+                    f'tc_qdisc_backlog_packets{{interface="{iface}",slice="{slice_name}"}} {m.group(1)}'
+                )
+
+            # Parse HTB rate (e.g. "rate 100Mbit")
+            m = re.search(r'rate\s+(\d+)([MmKk]?)bit', out)
+            if m:
+                rate_val = int(m.group(1))
+                unit = m.group(2).upper()
+                if unit == "K":
+                    rate_val = rate_val / 1000
+                lines.append(
+                    f'tc_htb_rate_mbit{{interface="{iface}",slice="{slice_name}"}} {rate_val}'
+                )
+
+            # Parse total sent bytes from the first qdisc line
+            m = re.search(r'Sent\s+(\d+)\s+bytes', out)
+            if m:
+                lines.append(
+                    f'tc_qdisc_sent_bytes{{interface="{iface}",slice="{slice_name}"}} {m.group(1)}'
+                )
+
+            # Parse dropped from qdisc
+            m = re.search(r'dropped\s+(\d+)', out)
+            if m:
+                lines.append(
+                    f'tc_qdisc_dropped{{interface="{iface}",slice="{slice_name}"}} {m.group(1)}'
+                )
+
+        except Exception:
+            pass
+        return lines
+
+    def collect_metrics():
+        lines = []
+        for iface, slice_name in INTERFACE_MAP.items():
+            if not os.path.exists(f"/sys/class/net/{iface}"):
+                continue
+            # sysfs counters
+            for stat in STATS:
+                value = read_stat(iface, stat)
+                metric_name = f"tun_{stat}"
+                lines.append(
+                    f'{metric_name}{{interface="{iface}",slice="{slice_name}"}} {value}'
+                )
+            # tc qdisc stats
+            lines.extend(collect_tc_stats(iface, slice_name))
+
+        # Also read overall ens33 stats for reference
+        ens33_path = "/sys/class/net/ens33/statistics"
+        if os.path.exists(ens33_path):
+            for stat in ["rx_bytes", "tx_bytes", "rx_packets", "tx_packets"]:
+                value = read_stat("ens33", stat)
+                lines.append(
+                    f'host_net_{stat}{{interface="ens33"}} {value}'
+                )
+
+        return "\n".join(lines) + "\n"
+
+    class MetricsHandler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == "/metrics":
+                body = collect_metrics().encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; version=0.0.4")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            elif self.path == "/health":
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.end_headers()
+                self.wfile.write(b"ok\n")
+            else:
+                self.send_response(404)
+                self.end_headers()
+
+        def log_message(self, format, *args):
+            pass  # Suppress request logs
+
+    if __name__ == "__main__":
+        print(f"[tun-exporter] Starting on port {PORT}")
+        server = http.server.HTTPServer(("0.0.0.0", PORT), MetricsHandler)
+        server.serve_forever()
+
+---
+# ============================================================
+# TUN Interface Metrics Exporter — DaemonSet
+# ============================================================
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tun-metrics-exporter
+  namespace: monitoring
+  labels:
+    app: tun-metrics-exporter
+spec:
+  selector:
+    matchLabels:
+      app: tun-metrics-exporter
+  template:
+    metadata:
+      labels:
+        app: tun-metrics-exporter
+    spec:
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        role: mec
+      containers:
+        - name: exporter
+          image: python:3.11-slim
+          command: ["python3", "/scripts/exporter.py"]
+          securityContext:
+            privileged: true
+          ports:
+            - containerPort: 9100
+              hostPort: 9100
+              name: metrics
+          volumeMounts:
+            - name: script
+              mountPath: /scripts
+            - name: sys-class-net
+              mountPath: /sys/class/net
+              readOnly: true
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "25m"
+            limits:
+              memory: "256Mi"
+              cpu: "100m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9100
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9100
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 5
+      volumes:
+        - name: script
+          configMap:
+            name: tun-exporter-script
+        - name: sys-class-net
+          hostPath:
+            path: /sys/class/net
+            type: Directory
+
+---
+# ============================================================
+# TUN Exporter — Service
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: tun-metrics-exporter
+  namespace: monitoring
+  labels:
+    app: tun-metrics-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app: tun-metrics-exporter
+  ports:
+    - name: metrics
+      port: 9100
+      targetPort: 9100

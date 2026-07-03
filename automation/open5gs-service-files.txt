@@ -1,0 +1,42 @@
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-amfd.service -> /lib/systemd/system/open5gs-amfd.service
+lrwxrwxrwx 1 root root  41 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-ausfd.service -> /lib/systemd/system/open5gs-ausfd.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-bsfd.service -> /lib/systemd/system/open5gs-bsfd.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-hssd.service -> /lib/systemd/system/open5gs-hssd.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-mmed.service -> /lib/systemd/system/open5gs-mmed.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-nrfd.service -> /lib/systemd/system/open5gs-nrfd.service
+lrwxrwxrwx 1 root root  41 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-nssfd.service -> /lib/systemd/system/open5gs-nssfd.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-pcfd.service -> /lib/systemd/system/open5gs-pcfd.service
+lrwxrwxrwx 1 root root  41 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-pcrfd.service -> /lib/systemd/system/open5gs-pcrfd.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-scpd.service -> /lib/systemd/system/open5gs-scpd.service
+lrwxrwxrwx 1 root root  41 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-seppd.service -> /lib/systemd/system/open5gs-seppd.service
+lrwxrwxrwx 1 root root  45 Jan  9 16:34 /etc/systemd/system/multi-user.target.wants/open5gs-smfd-embb.service -> /etc/systemd/system/open5gs-smfd-embb.service
+lrwxrwxrwx 1 root root  45 Jan  9 16:34 /etc/systemd/system/multi-user.target.wants/open5gs-smfd-mmtc.service -> /etc/systemd/system/open5gs-smfd-mmtc.service
+lrwxrwxrwx 1 root root  46 Jan  9 16:34 /etc/systemd/system/multi-user.target.wants/open5gs-smfd-urllc.service -> /etc/systemd/system/open5gs-smfd-urllc.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-udmd.service -> /lib/systemd/system/open5gs-udmd.service
+lrwxrwxrwx 1 root root  40 Oct 25  2025 /etc/systemd/system/multi-user.target.wants/open5gs-udrd.service -> /lib/systemd/system/open5gs-udrd.service
+lrwxrwxrwx 1 root root  41 Oct 10  2025 /etc/systemd/system/multi-user.target.wants/open5gs-webui.service -> /lib/systemd/system/open5gs-webui.service
+-rw-r--r-- 1 root root 332 Jan  9 16:32 /etc/systemd/system/open5gs-smfd-embb.service
+-rw-r--r-- 1 root root 360 Jan  9 16:33 /etc/systemd/system/open5gs-smfd-mmtc.service
+lrwxrwxrwx 1 root root   9 Jan  9 16:59 /etc/systemd/system/open5gs-smfd.service -> /dev/null
+-rw-r--r-- 1 root root 362 Jan  9 16:34 /etc/systemd/system/open5gs-smfd-urllc.service
+-rw-r--r-- 1 root root 344 Jan  9 17:08 /etc/systemd/system/open5gs-upfd-embb.service
+-rw-r--r-- 1 root root 344 Jan  9 17:08 /etc/systemd/system/open5gs-upfd-mmtc.service
+-rw-r--r-- 1 root root 349 Jan  9 17:08 /etc/systemd/system/open5gs-upfd-urllc.service
+-rw-r--r-- 1 root root 303 Jul 19  2025 /lib/systemd/system/open5gs-amfd.service
+-rw-r--r-- 1 root root 306 Jul 19  2025 /lib/systemd/system/open5gs-ausfd.service
+-rw-r--r-- 1 root root 312 Jul 19  2025 /lib/systemd/system/open5gs-bsfd.service
+-rw-r--r-- 1 root root 312 Jul 19  2025 /lib/systemd/system/open5gs-hssd.service
+-rw-r--r-- 1 root root 303 Jul 19  2025 /lib/systemd/system/open5gs-mmed.service
+-rw-r--r-- 1 root root 312 Jul 19  2025 /lib/systemd/system/open5gs-nrfd.service
+-rw-r--r-- 1 root root 306 Jul 19  2025 /lib/systemd/system/open5gs-nssfd.service
+-rw-r--r-- 1 root root 312 Jul 19  2025 /lib/systemd/system/open5gs-pcfd.service
+-rw-r--r-- 1 root root 315 Jul 19  2025 /lib/systemd/system/open5gs-pcrfd.service
+-rw-r--r-- 1 root root 312 Jul 19  2025 /lib/systemd/system/open5gs-scpd.service
+-rw-r--r-- 1 root root 316 Jul 19  2025 /lib/systemd/system/open5gs-seppd.service
+-rw-r--r-- 1 root root 307 Jul 19  2025 /lib/systemd/system/open5gs-sgwcd.service
+-rw-r--r-- 1 root root 307 Jul 19  2025 /lib/systemd/system/open5gs-sgwud.service
+-rw-r--r-- 1 root root 303 Jul 19  2025 /lib/systemd/system/open5gs-smfd.service
+-rw-r--r-- 1 root root 303 Jul 19  2025 /lib/systemd/system/open5gs-udmd.service
+-rw-r--r-- 1 root root 312 Jul 19  2025 /lib/systemd/system/open5gs-udrd.service
+-rw-r--r-- 1 root root 359 Jul 19  2025 /lib/systemd/system/open5gs-upfd.service
+-rw-r--r-- 1 root root 279 Oct 25  2025 /lib/systemd/system/open5gs-webui.service

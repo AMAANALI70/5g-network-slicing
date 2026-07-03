@@ -1,0 +1,102 @@
+---
+# ============================================================
+# mMTC UPF — Node 2 (kube2 / 192.168.49.183) ConfigMap
+# Uses secondary IP to avoid GTP-U port conflict with eMBB
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-mmtc-node2-config
+  namespace: mmtc
+data:
+  upf-mmtc.yaml: |
+    logger:
+      file:
+        path: /var/log/open5gs/upf-mmtc-node2.log
+      level: info
+    global:
+      max:
+        ue: 1024
+    upf:
+      pfcp:
+        server:
+          - address: 192.168.49.183
+            port: 8807
+      gtpu:
+        server:
+          - address: 192.168.49.183
+            port: 2152
+      session:
+        - subnet: 10.47.0.0/24
+          gateway: 10.47.0.1
+          dev: ogstun-mmtc
+          dnn: iot
+
+---
+# ============================================================
+# mMTC UPF — Node 2 Deployment (pinned to kube2)
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf-mmtc-node2
+  namespace: mmtc
+  labels:
+    app: upf-mmtc-node2
+    slice: mmtc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upf-mmtc-node2
+  template:
+    metadata:
+      labels:
+        app: upf-mmtc-node2
+        slice: mmtc
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: kube2
+      containers:
+        - name: upf
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]
+          env:
+            - name: TUN_DEV
+              value: "ogstun-mmtc"
+            - name: UE_SUBNET
+              value: "10.47.0.0/24"
+            - name: UE_GATEWAY
+              value: "10.47.0.1/24"
+            - name: UPF_CONFIG
+              value: "/config/upf-mmtc.yaml"
+            - name: TC_RATE
+              value: "1mbit"
+            - name: TC_CEIL
+              value: "5mbit"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
+      volumes:
+        - name: config
+          configMap:
+            name: upf-mmtc-node2-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice

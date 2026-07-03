@@ -1,0 +1,78 @@
+    - endpointslices
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+--
+    - endpointslices
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+--
+        {"apiVersion":"rbac.authorization.k8s.io/v1","kind":"ClusterRole","metadata":{"annotations":{},"name":"qos-orchestrator"},"rules":[{"apiGroups":[""],"resources":["resourcequotas"],"verbs":["get","list","patch","update"]},{"apiGroups":["apps"],"resources":["deployments","deployments/scale"],"verbs":["get","list","patch","update"]},{"apiGroups":[""],"resources":["pods","namespaces"],"verbs":["get","list"]}]}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: qos-orchestrator
+    resourceVersion: "4726"
+    uid: 5c506ce3-97a1-4fe2-aadd-d56d9ecc2389
+  rules:
+  - apiGroups:
+    - ""
+--
+    - endpointslices
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:
+--
+    name: system:controller:endpointslice-controller
+    resourceVersion: "111"
+    uid: ea8c5c8d-97df-4681-8435-503364d9a5ef
+  rules:
+  - apiGroups:
+    - ""
+--
+    - endpointslices
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+--
+    name: system:controller:endpointslicemirroring-controller
+    resourceVersion: "112"
+    uid: 95136194-0c6b-4d85-ad89-cc055e42eaa6
+  rules:
+  - apiGroups:
+    - ""
+--
+    - endpointslices
+    verbs:
+    - create
+    - delete
+    - get
+    - list
+--
+    - endpointslices
+    verbs:
+    - list
+    - watch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+--
+    - endpointslices
+    verbs:
+    - list
+    - watch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+--
+    - endpointslices
+    verbs:
+    - get
+    - list
+    - watch
+  - apiGroups:

@@ -1,0 +1,248 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"qos-orchestrator","namespace":"orchestrator"},"spec":{"ports":[{"name":"metrics","port":9200,"targetPort":9200}],"selector":{"app":"qos-orchestrator"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    name: qos-orchestrator
+    namespace: orchestrator
+    resourceVersion: "4742"
+    uid: bda41d4e-ef93-4626-a3fc-77608f03dd4d
+  spec:
+    clusterIP: 10.103.98.23
+    clusterIPs:
+    - 10.103.98.23
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: metrics
+      port: 9200
+      protocol: TCP
+      targetPort: 9200
+    selector:
+      app: qos-orchestrator
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"qos-orchestrator"},"name":"qos-orchestrator","namespace":"orchestrator"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"qos-orchestrator"}},"template":{"metadata":{"labels":{"app":"qos-orchestrator"}},"spec":{"containers":[{"image":"192.168.49.174:5000/qos-orchestrator:v7","imagePullPolicy":"IfNotPresent","livenessProbe":{"httpGet":{"path":"/health","port":9200},"initialDelaySeconds":10,"periodSeconds":30},"name":"orchestrator","ports":[{"containerPort":9200,"hostPort":9200,"name":"metrics"}],"readinessProbe":{"httpGet":{"path":"/health","port":9200},"initialDelaySeconds":5,"periodSeconds":10},"resources":{"limits":{"cpu":"500m","memory":"256Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN"]}},"volumeMounts":[{"mountPath":"/root/.ssh","name":"ssh-keys","readOnly":true}]}],"hostNetwork":true,"nodeSelector":{"role":"control"},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/control-plane","operator":"Exists"}],"volumes":[{"hostPath":{"path":"/home/kube-master/.ssh","type":"Directory"},"name":"ssh-keys"}]}}}}
+    creationTimestamp: "2026-04-29T11:32:29Z"
+    generation: 2
+    labels:
+      app: qos-orchestrator
+    name: qos-orchestrator
+    namespace: orchestrator
+    resourceVersion: "2562283"
+    uid: 5afb6749-c654-4d9d-bdcb-a8745e1e8efc
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 0
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: qos-orchestrator
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: qos-orchestrator
+      spec:
+        containers:
+        - image: 192.168.49.174:5000/qos-orchestrator:v7
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 9200
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: orchestrator
+          ports:
+          - containerPort: 9200
+            hostPort: 9200
+            name: metrics
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 9200
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /root/.ssh
+            name: ssh-keys
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        hostNetwork: true
+        nodeSelector:
+          role: control
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        volumes:
+        - hostPath:
+            path: /home/kube-master/.ssh
+            type: Directory
+          name: ssh-keys
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-29T11:32:29Z"
+      lastUpdateTime: "2026-04-29T11:32:39Z"
+      message: ReplicaSet "qos-orchestrator-8ff59c567" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-05-01T15:09:49Z"
+      lastUpdateTime: "2026-05-01T15:09:49Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 2
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "0"
+      deployment.kubernetes.io/max-replicas: "0"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2026-04-29T11:32:29Z"
+    generation: 2
+    labels:
+      app: qos-orchestrator
+      pod-template-hash: 8ff59c567
+    name: qos-orchestrator-8ff59c567
+    namespace: orchestrator
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: qos-orchestrator
+      uid: 5afb6749-c654-4d9d-bdcb-a8745e1e8efc
+    resourceVersion: "2562282"
+    uid: 06329365-17a4-40b7-9348-8056b71351ba
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app: qos-orchestrator
+        pod-template-hash: 8ff59c567
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: qos-orchestrator
+          pod-template-hash: 8ff59c567
+      spec:
+        containers:
+        - image: 192.168.49.174:5000/qos-orchestrator:v7
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 9200
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: orchestrator
+          ports:
+          - containerPort: 9200
+            hostPort: 9200
+            name: metrics
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 9200
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /root/.ssh
+            name: ssh-keys
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        hostNetwork: true
+        nodeSelector:
+          role: control
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        volumes:
+        - hostPath:
+            path: /home/kube-master/.ssh
+            type: Directory
+          name: ssh-keys
+  status:
+    observedGeneration: 2
+    replicas: 0
+kind: List
+metadata:
+  resourceVersion: ""

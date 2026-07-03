@@ -1,0 +1,102 @@
+[
+  {
+    "scenario": "S1",
+    "description": "Pre-Emptive Throttling",
+    "dry_run": true,
+    "ts": "2026-06-01T16:29:52.805442+00:00",
+    "verdict": "PASS",
+    "cot_trace": [
+      {
+        "attempt": 1,
+        "rtt_ms": 12.13,
+        "embb_load_fraction": null,
+        "rtt_trend": "stable",
+        "action": "throttle_embb",
+        "confidence": 0.8,
+        "root_cause_assessment": "eMBB load fraction is N/A due to insufficient history, but packet rate direction suggests high utilization (> 150Mbps), which may be causing queue pressure on GTP backhaul.",
+        "lever_validity": "Throttling eMBB could address the identified cause by reducing queuing pressure, as RTT trend is stable and within SLA.",
+        "wrong_lever_event": false
+      }
+    ],
+    "pass_criteria": [
+      "action == throttle_embb",
+      "RTT at decision time <= 20ms",
+      "root_cause_assessment mentions eMBB or load"
+    ],
+    "pass_note": "Pre-emptive throttle at RTT=12.1ms (below SLA 20.0ms) with ρ=None"
+  },
+  {
+    "scenario": "S2",
+    "description": "Wrong-Lever Avoidance",
+    "dry_run": true,
+    "ts": "2026-06-01T16:30:22.215379+00:00",
+    "verdict": "FAIL",
+    "cot_trace": [
+      {
+        "attempt": 1,
+        "rtt_ms": 31.8,
+        "embb_load_fraction": null,
+        "action": "throttle_embb",
+        "confidence": 0.85,
+        "root_cause_assessment": "RTT violation likely caused by eMBB load fraction being N/A due to insufficient history, but packet rate direction suggests eMBB is actively contributing to queue pressure.",
+        "lever_validity": "Throttling eMBB may address the identified cause, as high packet rates and CPU usage indicate active bursting, which plausibly causes queue pressure.",
+        "wrong_lever_event": false,
+        "lever_validity_score": 0.85
+      },
+      {
+        "attempt": 2,
+        "rtt_ms": 10.3,
+        "embb_load_fraction": null,
+        "action": "throttle_embb",
+        "confidence": 0.9,
+        "root_cause_assessment": "RTT violation likely caused by eMBB load fraction being N/A, which may be contributing to queue pressure on GTP backhaul.",
+        "lever_validity": "Throttling eMBB can address the identified cause if eMBB is actively bursting (high load fraction) and causing RTT elevation.",
+        "wrong_lever_event": false,
+        "lever_validity_score": 0.9
+      },
+      {
+        "attempt": 3,
+        "rtt_ms": 10.61,
+        "embb_load_fraction": null,
+        "action": "throttle_embb",
+        "confidence": 0.95,
+        "root_cause_assessment": "RTT violation likely caused by eMBB load fraction being N/A, indicating that throttling eMBB may address the issue.",
+        "lever_validity": "Throttling eMBB can address the identified cause since RTT is elevated and eMBB is the plausible cause (high packet rate direction).",
+        "wrong_lever_event": false,
+        "lever_validity_score": 0.95
+      }
+    ],
+    "pass_criteria": [
+      "action != throttle_embb",
+      "embb_load_fraction < 0.2 at decision time",
+      "root_cause_assessment does NOT cite eMBB as cause"
+    ],
+    "pass_note": "3/3 decisions incorrectly throttled eMBB despite low load fraction."
+  },
+  {
+    "scenario": "S3",
+    "description": "Memory-Assisted Restoration",
+    "dry_run": true,
+    "ts": "2026-06-01T16:32:04.898381+00:00",
+    "verdict": "PASS",
+    "cot_trace": [
+      {
+        "attempt": 1,
+        "rtt_ms": 13.17,
+        "stable_for_s": 93.5555489063263,
+        "action": "restore_embb",
+        "confidence": 0.8,
+        "root_cause_assessment": "RTT is within SLA, but recent throttling of eMBB has been effective in reducing GTP-U queue pressure, suggesting eMBB burst causing congestion.",
+        "lever_validity": "Throttling eMBB can address the identified cause by reducing queuing pressure on the shared GTP backhaul, as evidenced by previous successful throttle actions.",
+        "reasoning": "Previous throttling of eMBB was effective in reducing RTT, but load fraction is now low (<0.2), so restoring eMBB rate may not be necessary to maintain stability."
+      }
+    ],
+    "pass_criteria": [
+      "action == restore_embb",
+      "RTT <= SLA at decision time",
+      "stable_for >= 60s",
+      "reasoning or root_cause references prior memory"
+    ],
+    "pass_note": "restore_embb issued at RTT=13.2ms, stable_for=94s. Memory cited in reasoning. ✅"
+  }
+]

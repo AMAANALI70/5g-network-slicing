@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  creationTimestamp: "2026-04-12T06:41:34Z"
+  labels:
+    kubernetes.io/metadata.name: mmtc
+  name: mmtc
+  resourceVersion: "4590"
+  uid: 09ddb2af-47e5-40aa-8800-cd38cbe76a47
+spec:
+  finalizers:
+  - kubernetes
+status:
+  phase: Active

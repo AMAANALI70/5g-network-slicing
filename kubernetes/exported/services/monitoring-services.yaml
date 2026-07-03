@@ -1,0 +1,105 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"grafana"},"name":"grafana","namespace":"monitoring"},"spec":{"ports":[{"name":"web","nodePort":30300,"port":3000,"targetPort":3000}],"selector":{"app":"grafana"},"type":"NodePort"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    labels:
+      app: grafana
+    name: grafana
+    namespace: monitoring
+    resourceVersion: "4682"
+    uid: 9188c28c-4526-45e4-b01e-91b4418beec8
+  spec:
+    clusterIP: 10.101.41.203
+    clusterIPs:
+    - 10.101.41.203
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: web
+      nodePort: 30300
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
+    selector:
+      app: grafana
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"prometheus"},"name":"prometheus","namespace":"monitoring"},"spec":{"ports":[{"name":"web","nodePort":30090,"port":9090,"targetPort":9090}],"selector":{"app":"prometheus"},"type":"NodePort"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    labels:
+      app: prometheus
+    name: prometheus
+    namespace: monitoring
+    resourceVersion: "4707"
+    uid: d9966674-205c-4ec1-8878-813af19ea76c
+  spec:
+    clusterIP: 10.107.115.188
+    clusterIPs:
+    - 10.107.115.188
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: web
+      nodePort: 30090
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+    selector:
+      app: prometheus
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"tun-metrics-exporter"},"name":"tun-metrics-exporter","namespace":"monitoring"},"spec":{"ports":[{"name":"metrics","port":9100,"targetPort":9100}],"selector":{"app":"tun-metrics-exporter"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    labels:
+      app: tun-metrics-exporter
+    name: tun-metrics-exporter
+    namespace: monitoring
+    resourceVersion: "4718"
+    uid: d27c1a5d-1ea8-40ba-bc1b-c3c8f092e627
+  spec:
+    clusterIP: 10.97.211.34
+    clusterIPs:
+    - 10.97.211.34
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: metrics
+      port: 9100
+      protocol: TCP
+      targetPort: 9100
+    selector:
+      app: tun-metrics-exporter
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

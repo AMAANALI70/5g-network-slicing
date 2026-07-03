@@ -1,0 +1,42 @@
+[
+  {
+    "level": "medium",
+    "samples": 396,
+    "urllc_rtt_avg_ms": 12.66,
+    "urllc_rtt_max_ms": 13.93,
+    "urllc_rtt_min_ms": 11.67,
+    "embb_tp_avg_mbps": 79.02,
+    "embb_tp_min_mbps": 1.6,
+    "mmtc_msgs_avg": 0.0,
+    "mmtc_msgs_max": 0.0,
+    "throttle_actions": 0,
+    "tc_rate_min_mbit": 1000.0,
+    "tc_rate_avg_mbit": 1000.0,
+    "orchestrator_loops": 225,
+    "sla_violations": 0,
+    "recovery_time_s": "N/A",
+    "expected_rtt": "14\u201316 (mild pressure)",
+    "expected_embb": "~720",
+    "expected_pdr": ">99.5%"
+  },
+  {
+    "level": "high",
+    "samples": 396,
+    "urllc_rtt_avg_ms": 12.23,
+    "urllc_rtt_max_ms": 18.77,
+    "urllc_rtt_min_ms": 11.43,
+    "embb_tp_avg_mbps": 80.95,
+    "embb_tp_min_mbps": 21.6,
+    "mmtc_msgs_avg": 0.0,
+    "mmtc_msgs_max": 0.0,
+    "throttle_actions": 0,
+    "tc_rate_min_mbit": 1000.0,
+    "tc_rate_avg_mbit": 1000.0,
+    "orchestrator_loops": 449,
+    "sla_violations": 0,
+    "recovery_time_s": "N/A",
+    "expected_rtt": ">15 (SLA breach likely, orchestrator reacts)",
+    "expected_embb": "~860",
+    "expected_pdr": ">99.0%"
+  }
+]

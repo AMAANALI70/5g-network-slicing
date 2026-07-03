@@ -1,0 +1,808 @@
+# Project Context Summary – Agentic Network Slicing Orchestration Testbed
+
+## Overall Goal
+
+The objective of this project is to build and evaluate an **Agentic AI-based Network Slice Orchestrator** for a real 5G network slicing testbed and compare it against a traditional **Rule-Based Orchestrator**.
+
+The final deliverable is a scientifically defensible comparison demonstrating whether an agentic orchestration approach can provide measurable improvements in:
+
+* SLA violation rate
+* URLLC latency
+* Recovery time
+* eMBB throughput preservation
+* Decision quality
+* Decision stability
+* Adaptability under varying traffic conditions
+
+The comparison must be performed under identical network conditions using the same infrastructure, traffic generators, and monitoring pipeline.
+
+---
+
+# Testbed Architecture
+
+## Core Components
+
+### 5G Core
+
+* Open5GS
+
+### RAN
+
+* UERANSIM
+
+### Kubernetes Cluster
+
+* Multi-node deployment
+
+Nodes include:
+
+* Master node
+* Worker nodes
+
+### Slices
+
+Three logical slices:
+
+#### eMBB
+
+* Throughput-oriented
+* PDU session IP range:
+
+  * 10.45.0.x
+
+#### URLLC
+
+* Latency-oriented
+* PDU session IP range:
+
+  * 10.46.0.x
+
+#### mMTC
+
+* Massive IoT slice
+* PDU session IP range:
+
+  * 10.47.0.x
+
+---
+
+# UE Design
+
+There are:
+
+### 3 UEs total
+
+NOT:
+
+* 3 eMBB UEs
+* 3 URLLC UEs
+* 3 mMTC UEs
+
+Instead:
+
+Each UE establishes:
+
+* one eMBB session
+* one URLLC session
+* one mMTC session
+
+Therefore:
+
+### Total PDU Sessions
+
+```text
+3 UEs × 3 slices
+=
+9 PDU sessions
+```
+
+Final healthy topology:
+
+```text
+eMBB  = 3 sessions
+URLLC = 3 sessions
+mMTC  = 3 sessions
+
+Total = 9 sessions
+```
+
+---
+
+# Traffic Generation
+
+## eMBB
+
+Traffic generated through:
+
+```bash
+embb_client.py
+```
+
+Running over:
+
+```text
+10.45.x.x
+```
+
+Interfaces:
+
+```text
+uesimtun*
+```
+
+---
+
+## URLLC
+
+Traffic generated through:
+
+```bash
+urllc_client.py
+```
+
+Measures:
+
+* RTT
+* packet loss
+
+Using ICMP-style latency probes.
+
+---
+
+## mMTC
+
+Traffic generated through:
+
+```bash
+mmtc_client.py
+```
+
+Using MQTT publishing.
+
+Port:
+
+```text
+30883
+```
+
+---
+
+# Original Objective
+
+Initially the focus was:
+
+```text
+Collect rule-based dataset
+→ collect agentic dataset
+→ compare
+```
+
+However during implementation numerous infrastructure and monitoring issues were discovered.
+
+The project shifted temporarily into:
+
+```text
+Infrastructure Stabilization
++
+Monitoring Validation
++
+Agent Audit
+```
+
+before dataset collection could continue.
+
+---
+
+# Major Issues Encountered
+
+---
+
+## Issue 1 – Tunnel Instability
+
+Symptoms:
+
+* missing uesimtun interfaces
+* dead PDU sessions
+* incomplete slice visibility
+
+Example:
+
+```text
+URLLC:
+1/3 active
+
+instead of
+
+3/3 active
+```
+
+Impact:
+
+* invalid monitoring
+* incorrect RTT measurements
+* invalid datasets
+
+---
+
+## Issue 2 – Broken Recovery Script
+
+Original recovery script attempted:
+
+```bash
+for pid in $(pgrep ...)
+do
+    echo 123 | sudo -S kill $pid
+done
+```
+
+Problem:
+
+stdin consumed after first sudo.
+
+Result:
+
+```text
+first process killed
+remaining processes survive
+```
+
+Consequences:
+
+* old gNB remains alive
+* GTP socket remains bound
+* restart fails
+
+---
+
+## Fix
+
+Changed to:
+
+```bash
+sudo -S kill -9 PID1 PID2 PID3 ...
+```
+
+single sudo invocation.
+
+Additional fixes:
+
+* longer cleanup delay
+* proper process counting
+* stale log cleanup
+
+---
+
+## Issue 3 – Stale Log Files
+
+Monitor displayed:
+
+```text
+uesimtun11
+uesimtun12
+uesimtun17
+```
+
+even though interfaces no longer existed.
+
+Cause:
+
+old log files remained in:
+
+```text
+/tmp/mec-clients/
+```
+
+Fix:
+
+```bash
+rm -f /tmp/mec-clients/*.log
+```
+
+during restart.
+
+---
+
+## Issue 4 – GTP Socket Bind Failure
+
+Cause:
+
+old gNB process survived.
+
+New gNB failed:
+
+```text
+address already in use
+```
+
+Fix:
+
+proper process termination before restart.
+
+---
+
+## Issue 5 – Metrics Server Failure
+
+Large effort spent debugging:
+
+```bash
+kubectl top node
+```
+
+always returning:
+
+```text
+Metrics API not available
+```
+
+Investigation included:
+
+* metrics-server
+* kubelet
+* apiservice
+* TLS
+* secure-port
+* aggregation layer
+
+Eventually determined:
+
+metrics infrastructure was not critical for thesis progress.
+
+Decision:
+
+Do not block project on metrics-server.
+
+Use Prometheus-based metrics instead.
+
+---
+
+# Agentic Orchestrator Architecture
+
+Current codebase:
+
+```text
+monitoring_agent.py
+state_agent.py
+llm_planning_agent.py
+execution_agent.py
+agent_memory.py
+graph.py
+```
+
+Implemented using:
+
+```text
+LangGraph
+```
+
+---
+
+# Original Agent Problems
+
+---
+
+## Problem 1 – Groq Quota Exhaustion
+
+Observed:
+
+```text
+orchestrator_llm_used = 0
+```
+
+Cause:
+
+Groq:
+
+```text
+500000 / 500000 tokens used
+```
+
+Result:
+
+every decision fell back to:
+
+```python
+_rule_based_fallback()
+```
+
+Meaning:
+
+the "agentic" orchestrator behaved exactly like the rule-based orchestrator.
+
+---
+
+## Problem 2 – RTT Underestimation
+
+Dead tunnels were averaged as:
+
+```text
+0 ms
+```
+
+instead of being excluded.
+
+Example:
+
+True RTT:
+
+```text
+14.7 ms
+```
+
+Observed:
+
+```text
+5 ms
+```
+
+Impact:
+
+~65% error.
+
+Fix:
+
+exclude dead tunnel RTT values.
+
+---
+
+## Problem 3 – mMTC Metrics Always Zero
+
+Observed:
+
+```text
+mmtc_msgs_total = 0
+```
+
+despite active MQTT traffic.
+
+Cause:
+
+incorrect data source.
+
+Fix:
+
+read MQTT counts from SSH log output.
+
+Result:
+
+```text
+2240+
+messages visible
+```
+
+---
+
+## Problem 4 – mMTC PDR Formula Inverted
+
+Original implementation always produced:
+
+```text
+1.0
+```
+
+even during failures.
+
+Fix:
+
+measure actual tunnel delivery fraction.
+
+Example:
+
+```text
+2/3 alive
+=
+0.67
+```
+
+---
+
+## Problem 5 – Memory Learning Broken
+
+Original:
+
+```python
+rtt_after = rtt_before
+```
+
+same-cycle measurement.
+
+Meaning:
+
+agent never learned action outcomes.
+
+Fix:
+
+store outcome from NEXT cycle.
+
+Implemented:
+
+```text
+needs_outcome_update flag
+```
+
+---
+
+## Problem 6 – Prompt Contained Rules
+
+Prompt included:
+
+```text
+13–14 ms → 500 Mbit
+14–15 ms → 200 Mbit
+15+ ms → 50 Mbit
+```
+
+Meaning:
+
+LLM was merely executing embedded rules.
+
+Fix:
+
+removed threshold mapping entirely.
+
+---
+
+# Current Monitoring State
+
+Verified healthy after recovery.
+
+Current status:
+
+```text
+eMBB  = 3/3
+URLLC = 3/3
+mMTC  = 3/3
+```
+
+All 9 sessions active.
+
+---
+
+# Current Verified Metrics
+
+Validated:
+
+* RTT
+* RTT max
+* dead tunnel count
+* eMBB throughput
+* eMBB packet rate
+* mMTC messages
+* mMTC PDR
+
+Remaining observability gaps:
+
+* UE count tracking
+* node CPU
+* node memory
+* URLLC pod CPU
+* URLLC pod memory
+* mMTC pod CPU
+* mMTC pod memory
+
+These are lower priority than restoring actual LLM functionality.
+
+---
+
+# Current Research Question
+
+The project is no longer:
+
+```text
+Can an LLM issue tc commands?
+```
+
+The project is now:
+
+```text
+Can an Agentic Orchestrator
+outperform a Rule-Based Orchestrator
+in a real network slicing environment?
+```
+
+---
+
+# Desired Difference Between Rule-Based and Agentic
+
+Rule-Based:
+
+```text
+Fixed thresholds
+Fixed escalation
+Fixed restoration
+Reactive behavior
+```
+
+Agentic:
+
+```text
+Context-aware decisions
+Multi-metric reasoning
+Root-cause analysis
+Outcome-informed decisions
+Adaptive restoration
+Predictive behavior
+```
+
+Examples already identified:
+
+### Scenario A
+
+Rule:
+
+```text
+Wait for violation
+```
+
+Agent:
+
+```text
+Throttle pre-emptively
+```
+
+---
+
+### Scenario B
+
+Rule:
+
+```text
+High RTT
+→ throttle eMBB
+```
+
+Agent:
+
+```text
+High RTT
++
+Low eMBB traffic
+
+→ do NOT throttle
+```
+
+because congestion is not the root cause.
+
+---
+
+### Scenario C
+
+Rule:
+
+```text
+Restore after fixed timer
+```
+
+Agent:
+
+```text
+Restore only after burst actually ends
+```
+
+---
+
+# Current Blocker
+
+The infrastructure is healthy.
+
+Monitoring is mostly validated.
+
+Memory fixes are complete.
+
+Prompt redesign is complete.
+
+The main blocker is:
+
+```text
+Groq quota exhaustion
+```
+
+The agent cannot perform actual LLM reasoning.
+
+---
+
+# Planned Next Step
+
+## Migrate to Ollama
+
+Target:
+
+```text
+Llama 3.1 8B
+```
+
+Goals:
+
+* no API quota
+* reproducible
+* local inference
+* long-running experiments
+
+Before migration:
+
+benchmark:
+
+* load time
+* latency
+* CPU usage
+* memory usage
+
+---
+
+# Planned Experiment Framework
+
+Compare:
+
+```text
+Rule-Based
+vs
+Agentic
+```
+
+Under:
+
+```text
+Low Traffic
+Medium Traffic
+High Traffic
+```
+
+For identical durations and conditions.
+
+Metrics:
+
+* SLA violation rate
+* Mean RTT
+* p95 RTT
+* Recovery time
+* eMBB throughput
+* mMTC delivery rate
+* Oscillation count
+* Decision latency
+* Action count
+
+---
+
+# Current Project Status
+
+Infrastructure:
+
+```text
+Healthy
+```
+
+Monitoring:
+
+```text
+Mostly validated
+```
+
+Dataset collection:
+
+```text
+Paused
+```
+
+Rule-based orchestrator:
+
+```text
+Ready
+```
+
+Agentic orchestrator:
+
+```text
+Architecture fixed
+LLM backend blocked
+```
+
+Immediate priority:
+
+```text
+Benchmark and migrate to Ollama
+→ Verify real LLM decisions
+→ Build automated experiment runner
+→ Run Rule vs Agentic comparison
+→ Collect final datasets
+→ Perform statistical evaluation
+```
+

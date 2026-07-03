@@ -1,0 +1,523 @@
+# Plan: Containerize & Deploy 3 Slice-Specific UPFs in Kubernetes
+
+## Your Current Setup (No Changes Yet)
+
+```
+VM: 192.168.49.143 (ens33)
+├── Open5GS v2.7.6 (native)
+│   ├── AMF, NRF, NSSF, AUSF, UDM, UDR, PCF  (control plane)
+│   ├── SMF-eMBB   → 127.0.0.4:8805  (PFCP)
+│   ├── SMF-URLLC  → 127.0.0.5:8806  (PFCP)
+│   ├── SMF-mMTC   → 127.0.0.6:8807  (PFCP)
+│   ├── UPF-eMBB   → 127.0.0.7:8805  / GTP-U 192.168.49.143:2152
+│   ├── UPF-URLLC  → 127.0.0.8:8806  / GTP-U 192.168.49.144:2152
+│   └── UPF-mMTC   → 127.0.0.9:8807  / GTP-U 192.168.49.146:2152
+│
+└── Minikube (192.168.58.2, bridge br-7aeac7398ce9)
+    ├── Namespace: embb   (test nginx pod running)
+    ├── Namespace: urllc  (test app pod running)
+    └── Namespace: mmtc   (test app pod running)
+```
+
+## Target Architecture
+
+```
+UERANSIM  ──GTP-U──→  UPF Pod (K8s, hostNetwork)  ──PFCP──→  SMF (native)
+                              │
+                           tc shaping
+                           (inside pod)
+                              │
+                         ogstun-xxx TUN
+                         (inside pod)
+                              │
+                         NAT / routing
+                         → internet
+```
+
+```mermaid
+graph TD
+    UE["UERANSIM UE"] -->|GTP-U| gNB["UERANSIM gNB"]
+    gNB -->|GTP-U tunnel| UPF_EMBB["UPF-eMBB Pod<br/>ns: embb"]
+    gNB -->|GTP-U tunnel| UPF_URLLC["UPF-URLLC Pod<br/>ns: urllc"]
+    gNB -->|GTP-U tunnel| UPF_MMTC["UPF-mMTC Pod<br/>ns: mmtc"]
+
+    UPF_EMBB -->|PFCP| SMF_EMBB["SMF-eMBB<br/>native 127.0.0.4:8805"]
+    UPF_URLLC -->|PFCP| SMF_URLLC["SMF-URLLC<br/>native 127.0.0.5:8806"]
+    UPF_MMTC -->|PFCP| SMF_MMTC["SMF-mMTC<br/>native 127.0.0.6:8807"]
+
+    SMF_EMBB --> NRF["NRF / AMF / NSSF<br/>native control plane"]
+    SMF_URLLC --> NRF
+    SMF_MMTC --> NRF
+
+    UPF_EMBB -->|"tc qdisc (htb)"| Internet["Internet"]
+    UPF_URLLC -->|"tc qdisc (htb/prio)"| Internet
+    UPF_MMTC -->|"tc qdisc (htb)"| Internet
+
+    style UPF_EMBB fill:#2d7a4f,color:#fff
+    style UPF_URLLC fill:#8b5a2b,color:#fff
+    style UPF_MMTC fill:#4a6fa5,color:#fff
+```
+
+---
+
+## Phase 0 — Prerequisites & Feasibility
+
+### Can You Do This on One VM?
+
+**Yes**, but with specific constraints:
+
+| Concern | Solution |
+|---|---|
+| UPF needs `NET_ADMIN` + TUN device | Pods run as **privileged** with `NET_ADMIN` capability |
+| UPF must reach SMF on `127.0.0.x` (PFCP) | Use `hostNetwork: true` — pod shares the host's network stack |
+| GTP-U must be reachable from gNB | `hostNetwork: true` exposes GTP-U on host IPs directly |
+| `tc` must be available inside container | Install `iproute2` in the Docker image |
+| TUN device (`ogstun-xxx`) creation | UPF creates it; needs [/dev/net/tun](file:///dev/net/tun) device mounted |
+
+> [!IMPORTANT]
+> Using `hostNetwork: true` is **critical**. Without it, UPF pods would be on the minikube bridge network (192.168.58.x) and could not reach `127.0.0.x` loopback addresses where your SMFs listen for PFCP. It also means Kubernetes Services/ClusterIPs won't be used for UPF traffic — the pod directly shares the host's network interfaces.
+
+### What You Must Stop First
+
+Before deploying UPF pods, **stop the native UPF processes** to free the ports:
+
+```bash
+# Stop native UPFs (they will be replaced by pods)
+sudo systemctl stop open5gs-upfd      # default UPF
+# If using custom systemd units for slice UPFs:
+sudo systemctl stop open5gs-upfd-embb
+sudo systemctl stop open5gs-upfd-urllc
+sudo systemctl stop open5gs-upfd-mmtc
+```
+
+> [!CAUTION]
+> The native SMFs (smf-embb, smf-urllc, smf-mmtc) stay **running as-is**. Only the UPFs move into Kubernetes. **Do NOT stop the SMFs.**
+
+---
+
+## Phase 1 — Build the UPF Docker Image
+
+### Dockerfile
+
+Create a single Dockerfile that can run any of the 3 UPFs based on a mounted config:
+
+```dockerfile
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository ppa:open5gs/latest \
+    && apt-get update \
+    && apt-get install -y \
+      open5gs-upf \
+      iproute2 \
+      iptables \
+      iputils-ping \
+      net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Entrypoint script handles TUN creation, tc setup, then launches UPF
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+```
+
+### Entrypoint Script (`entrypoint.sh`)
+
+```bash
+#!/bin/bash
+set -e
+
+# --- Environment variables (set from K8s manifests) ---
+TUN_DEV=${TUN_DEV:-ogstun}
+UE_SUBNET=${UE_SUBNET:-10.45.0.0/24}
+UE_GATEWAY=${UE_GATEWAY:-10.45.0.1}
+UPF_CONFIG=${UPF_CONFIG:-/etc/open5gs/upf.yaml}
+
+# Slice-specific tc shaping (env vars from deployment)
+TC_RATE=${TC_RATE:-}          # e.g., "100mbit"
+TC_CEIL=${TC_CEIL:-}          # e.g., "100mbit"
+TC_LATENCY=${TC_LATENCY:-}   # e.g., "1ms"  (for netem)
+TC_PRIORITY=${TC_PRIORITY:-}  # e.g., "1" (for prio qdisc)
+
+# --- 1. Create TUN device ---
+echo "[entrypoint] Creating TUN device: $TUN_DEV"
+ip tuntap add name $TUN_DEV mode tun
+ip addr add $UE_GATEWAY dev $TUN_DEV
+ip link set $TUN_DEV up
+
+# --- 2. Enable IP forwarding + NAT ---
+echo "[entrypoint] Setting up IP forwarding and NAT"
+sysctl -w net.ipv4.ip_forward=1
+iptables -t nat -A POSTROUTING -s $UE_SUBNET ! -o $TUN_DEV -j MASQUERADE
+
+# --- 3. Apply tc shaping (if configured) ---
+if [ -n "$TC_RATE" ]; then
+    echo "[entrypoint] Applying tc shaping: rate=$TC_RATE ceil=$TC_CEIL"
+    tc qdisc add dev $TUN_DEV root handle 1: htb default 1
+    tc class add dev $TUN_DEV parent 1: classid 1:1 htb \
+        rate $TC_RATE ceil ${TC_CEIL:-$TC_RATE}
+
+    # Add netem for latency (URLLC gets ultra-low, mMTC gets tolerance)
+    if [ -n "$TC_LATENCY" ]; then
+        echo "[entrypoint] Adding netem: latency=$TC_LATENCY"
+        tc qdisc add dev $TUN_DEV parent 1:1 handle 10: netem \
+            delay $TC_LATENCY
+    fi
+fi
+
+# --- 4. Launch UPF ---
+echo "[entrypoint] Starting open5gs-upfd with config: $UPF_CONFIG"
+exec open5gs-upfd -c $UPF_CONFIG
+```
+
+### Build & Load into Minikube
+
+```bash
+# Point docker CLI to minikube's daemon (avoids needing a registry)
+eval $(minikube docker-env)
+
+# Build inside minikube's docker
+docker build -t open5gs-upf:local -f Dockerfile .
+
+# Verify
+docker images | grep open5gs-upf
+```
+
+---
+
+## Phase 2 — Kubernetes Manifests (Per-Slice)
+
+### Strategy: One UPF Deployment Per Namespace
+
+Each slice gets:
+- A **ConfigMap** with the UPF YAML (modified for container paths)
+- A **Deployment** (1 replica, privileged, hostNetwork)
+- A **ClusterIP Service** (for monitoring/metrics, not for PFCP traffic which goes via host)
+
+### 2a. eMBB UPF (namespace: `embb`)
+
+#### ConfigMap
+
+The UPF config is almost identical to your current [upf-embb.yaml](file:///etc/open5gs/upf-embb.yaml), but the `session.dev` field is removed (the entrypoint creates the TUN device):
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-embb-config
+  namespace: embb
+data:
+  upf-embb.yaml: |
+    logger:
+      file:
+        path: /var/log/open5gs/upf-embb.log
+    global:
+      max:
+        ue: 1024
+    upf:
+      pfcp:
+        server:
+          - address: 127.0.0.7
+            port: 8805
+      gtpu:
+        server:
+          - address: 192.168.49.143
+            port: 2152
+      session:
+        - subnet: 10.45.0.0/24
+          gateway: 10.45.0.1
+          dnn: internet
+```
+
+#### Deployment
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf-embb
+  namespace: embb
+  labels:
+    app: upf-embb
+    slice: embb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upf-embb
+  template:
+    metadata:
+      labels:
+        app: upf-embb
+        slice: embb
+    spec:
+      hostNetwork: true          # Share host's network (reach 127.0.0.x)
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: upf
+          image: open5gs-upf:local
+          imagePullPolicy: Never  # Use locally built image
+          securityContext:
+            privileged: true      # Needed for TUN, tc, iptables
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]
+          env:
+            - name: TUN_DEV
+              value: "ogstun-embb"
+            - name: UE_SUBNET
+              value: "10.45.0.0/24"
+            - name: UE_GATEWAY
+              value: "10.45.0.1/24"
+            - name: UPF_CONFIG
+              value: "/config/upf-embb.yaml"
+            # tc shaping: eMBB = high bandwidth
+            - name: TC_RATE
+              value: "100mbit"
+            - name: TC_CEIL
+              value: "100mbit"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: config
+          configMap:
+            name: upf-embb-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+```
+
+#### Service (metrics endpoint)
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: upf-embb-metrics
+  namespace: embb
+spec:
+  type: ClusterIP
+  selector:
+    app: upf-embb
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+```
+
+### 2b. URLLC UPF (namespace: `urllc`)
+
+Same pattern, different values:
+
+| Field | Value |
+|---|---|
+| PFCP | `127.0.0.8:8806` |
+| GTP-U | `192.168.49.144:2152` |
+| Subnet | `10.46.0.0/24` |
+| Gateway | `10.46.0.1/24` |
+| TUN device | `ogstun-urllc` |
+| DNN | `urllc` |
+| tc rate | `50mbit` (bandwidth-constrained, latency-optimized) |
+| tc latency | `1ms` (ultra-low via netem) |
+
+### 2c. mMTC UPF (namespace: `mmtc`)
+
+| Field | Value |
+|---|---|
+| PFCP | `127.0.0.9:8807` |
+| GTP-U | `192.168.49.146:2152` |
+| Subnet | `10.47.0.0/24` |
+| Gateway | `10.47.0.1/24` |
+| TUN device | `ogstun-mmtc` |
+| DNN | `iot` |
+| tc rate | `1mbit` (low bandwidth for IoT sensors) |
+| tc ceil | `5mbit` |
+
+---
+
+## Phase 3 — SMF Config Changes (Minimal)
+
+> [!NOTE]
+> Because we use `hostNetwork: true`, the UPF pods will bind to the **exact same addresses** as your current native UPFs (`127.0.0.7:8805`, `127.0.0.8:8806`, `127.0.0.9:8807`). **No changes to the SMF configs are required.** The SMFs won't even know the UPFs moved to Kubernetes.
+
+The only change needed is **stopping the native UPF processes** so the ports are free for the pods.
+
+---
+
+## Phase 4 — Deployment Sequence
+
+```mermaid
+graph LR
+    A["1. Build Docker<br/>image"] --> B["2. Stop native<br/>UPFs"]
+    B --> C["3. Deploy eMBB<br/>UPF pod"]
+    C --> D["4. Deploy URLLC<br/>UPF pod"]
+    D --> E["5. Deploy mMTC<br/>UPF pod"]
+    E --> F["6. Verify PFCP<br/>association"]
+    F --> G["7. Test PDU<br/>session + ping"]
+    G --> H["8. Verify tc<br/>shaping"]
+```
+
+### Step-by-Step Commands
+
+```bash
+# 1. Build image (inside minikube docker)
+eval $(minikube docker-env)
+docker build -t open5gs-upf:local .
+
+# 2. Stop native UPFs
+sudo systemctl stop open5gs-upfd-embb
+sudo systemctl stop open5gs-upfd-urllc
+sudo systemctl stop open5gs-upfd-mmtc
+
+# 3-5. Deploy
+kubectl apply -f k8s/embb/configmap.yaml
+kubectl apply -f k8s/embb/deployment.yaml
+kubectl apply -f k8s/urllc/configmap.yaml
+kubectl apply -f k8s/urllc/deployment.yaml
+kubectl apply -f k8s/mmtc/configmap.yaml
+kubectl apply -f k8s/mmtc/deployment.yaml
+
+# 6. Verify pods are running
+kubectl get pods -n embb -l app=upf-embb
+kubectl get pods -n urllc -l app=upf-urllc
+kubectl get pods -n mmtc -l app=upf-mmtc
+
+# 7. Check PFCP association in SMF logs
+tail -f /var/log/open5gs/smf-embb.log | grep -i pfcp
+tail -f /var/log/open5gs/smf-urllc.log | grep -i pfcp
+tail -f /var/log/open5gs/smf-mmtc.log | grep -i pfcp
+
+# 8. Test from UERANSIM
+sudo ./nr-ue -c ue-embb.yaml
+ping 10.45.0.1  # via ogstun-embb (now inside pod)
+```
+
+---
+
+## Phase 5 — tc Shaping Inside Pods
+
+### Per-Slice QoS Profile
+
+| Slice | tc Type | Rate | Ceil | Latency (netem) | Rationale |
+|---|---|---|---|---|---|
+| **eMBB** | HTB | 100mbit | 100mbit | — | High throughput streaming |
+| **URLLC** | HTB + netem | 50mbit | 50mbit | 1ms | Ultra-low latency |
+| **mMTC** | HTB | 1mbit | 5mbit | — | Low bandwidth IoT |
+
+### Runtime Verification
+
+```bash
+# Exec into a UPF pod and inspect tc
+kubectl exec -n embb deploy/upf-embb -- tc qdisc show dev ogstun-embb
+kubectl exec -n urllc deploy/upf-urllc -- tc qdisc show dev ogstun-urllc
+kubectl exec -n mmtc deploy/upf-mmtc -- tc qdisc show dev ogstun-mmtc
+```
+
+---
+
+## Phase 6 — Namespace-Based Service Isolation
+
+Even though UPF traffic uses `hostNetwork`, the **namespace separation gives you**:
+
+| Benefit | How |
+|---|---|
+| **Logical isolation** | Each UPF is in its own namespace (`embb`, `urllc`, `mmtc`) |
+| **RBAC policies** | Restrict who can `exec` into URLLC vs mMTC pods |
+| **NetworkPolicies** | Future: add Calico/Cilium CNI for pod-level firewall rules |
+| **Resource Quotas** | Limit CPU/memory per namespace per slice |
+| **Monitoring** | Slice-specific metrics via namespace labels |
+| **Independent scaling** | Scale eMBB UPF independently of URLLC |
+
+### Example: Resource Quota per Slice
+
+```yaml
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: upf-quota
+  namespace: urllc
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 512Mi
+    limits.cpu: "2"
+    limits.memory: 1Gi
+```
+
+---
+
+## Risks & Mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| `hostNetwork` pods conflict on ports | UPF won't start | Only one UPF per PFCP/GTP-U port; stop native UPFs first |
+| Minikube single-node limits | Resource contention | Use resource limits + monitor with `kubectl top` |
+| `privileged: true` security | Container escape risk | Acceptable for research; production would use SELinux + specific caps |
+| Kubernetes restarts UPF pod | PFCP association breaks | SMF heartbeat will re-establish; add `restartPolicy: Always` |
+| GTP-U IP `192.168.49.144/146` not bound to `ens33` | URLLC/mMTC GTP-U unreachable | Must add secondary IPs to `ens33` as before |
+| Docker image pulls Open5GS version mismatch | Config incompatibility | Pin version `open5gs=2.7.6~jammy` in Dockerfile |
+
+---
+
+## File/Directory Structure to Create
+
+```
+/etc/open5gs/k8s/
+├── Dockerfile
+├── entrypoint.sh
+├── embb/
+│   ├── configmap.yaml
+│   ├── deployment.yaml
+│   └── service.yaml
+├── urllc/
+│   ├── configmap.yaml
+│   ├── deployment.yaml
+│   └── service.yaml
+└── mmtc/
+    ├── configmap.yaml
+    ├── deployment.yaml
+    └── service.yaml
+```
+
+---
+
+## Verification Plan
+
+### Automated Checks
+1. `kubectl get pods -A -l slice` — all 3 UPF pods in `Running` state
+2. `kubectl exec -n embb deploy/upf-embb -- tc qdisc show` — tc rules applied
+3. `grep "PFCP association" /var/log/open5gs/smf-embb.log` — PFCP heartbeat OK
+
+### Manual Verification (by you)
+1. Start UERANSIM UE for each slice → PDU session established
+2. `ping` through each UPF's TUN interface → internet reachable
+3. `iperf3` through eMBB → throughput ~100mbit (shaped)
+4. `ping` through URLLC → latency ~1ms (shaped)
+5. `iperf3` through mMTC → throughput ~1mbit (shaped)
+
+---
+
+## Summary: What Changes vs What Stays
+
+| Component | Current | After Migration |
+|---|---|---|
+| AMF, NRF, NSSF, PCF, etc. | Native systemd | **No change** |
+| SMF-eMBB/URLLC/mMTC | Native systemd | **No change** |
+| SMF configs | Current YAML | **No change** |
+| UPF-eMBB | Native systemd | **→ K8s Pod (ns: embb)** |
+| UPF-URLLC | Native systemd | **→ K8s Pod (ns: urllc)** |
+| UPF-mMTC | Native systemd | **→ K8s Pod (ns: mmtc)** |
+| tc shaping | Applied from host | **→ Inside container (entrypoint)** |
+| UERANSIM | External/native | **No change** |

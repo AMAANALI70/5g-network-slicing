@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+
+    scrape_configs:
+
+      # Node-level TUN metrics (worker1 only — kube2 is offline)
+      - job_name: 'tun-metrics'
+        static_configs:
+          - targets: ['192.168.49.172:9100']
+            labels:
+              instance: 'kube-worker1'
+
+      # QoS Orchestrator (rule-based or agentic, same port)
+      - job_name: 'qos-orchestrator'
+        scrape_interval: 5s
+        static_configs:
+          - targets: ['192.168.49.174:9200']
+            labels:
+              instance: 'orchestrator'
+
+      # eMBB App — nginx stub_status
+      - job_name: 'embb-nginx'
+        scrape_interval: 5s
+        metrics_path: /status
+        static_configs:
+          - targets: ['192.168.49.172:30880']
+            labels:
+              slice: 'embb'
+              app: 'nginx'
+
+      # cAdvisor metrics (master + worker1 only)
+      - job_name: 'kubelet-cadvisor'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/cadvisor
+        static_configs:
+          - targets:
+              - '192.168.49.174:10250'
+              - '192.168.49.172:10250'
+
+      # kubelet resource metrics (master + worker1 only)
+      - job_name: 'kubelet-resource'
+        scheme: https
+        tls_config:
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        metrics_path: /metrics/resource
+        static_configs:
+          - targets:
+              - '192.168.49.174:10250'
+              - '192.168.49.172:10250'
+
+      {"apiVersion":"v1","data":{"prometheus.yml":"global:\n  scrape_interval: 5s\n  evaluation_interval: 5s\n\nscrape_configs:\n  - job_name: 'tun-metrics'\n    static_configs:\n      - targets: ['192.168.49.171:9100']\n        labels:\n          instance: 'kube-worker1'\n      - targets: ['192.168.49.181:9100']\n        labels:\n          instance: 'kube-worker2'\n\n  - job_name: 'qos-orchestrator'\n    scrape_interval: 5s\n    static_configs:\n      - targets: ['192.168.49.174:9200']\n        labels:\n          instance: 'orchestrator'\n\n  # eMBB App — Nginx stub_status metrics\n  - job_name: 'embb-nginx'\n    scrape_interval: 5s\n    metrics_path: /status\n    static_configs:\n      - targets:\n          - 'embb-app.embb.svc.cluster.local:8080'\n        labels:\n          slice: 'embb'\n          app: 'nginx'\n\n  # App-level custom exporters (urllc + mmtc)\n  - job_name: 'slice-app-metrics'\n    scrape_interval: 5s\n    static_configs:\n      - targets: ['192.168.49.171:30114']\n        labels:\n          slice: 'urllc'\n          app: 'iperf3'\n      - targets: ['192.168.49.171:30115']\n        labels:\n          slice: 'mmtc'\n          app: 'mqtt'\n\n  # cAdvisor (kubelet) — container CPU, memory by namespace\n  - job_name: 'kubelet-cadvisor'\n    scheme: https\n    tls_config:\n      insecure_skip_verify: true\n    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n    metrics_path: /metrics/cadvisor\n    static_configs:\n      - targets:\n        - '192.168.49.171:10250'\n        - '192.168.49.181:10250'\n        - '192.168.49.174:10250'\n\n  # kubelet resource metrics\n  - job_name: 'kubelet-resource'\n    scheme: https\n    tls_config:\n      insecure_skip_verify: true\n    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n    metrics_path: /metrics/resource\n    static_configs:\n      - targets:\n        - '192.168.49.171:10250'\n        - '192.168.49.181:10250'\n        - '192.168.49.174:10250'\n"},"kind":"ConfigMap","metadata":{"annotations":{},"creationTimestamp":"2026-04-12T06:41:36Z","name":"prometheus-config","namespace":"monitoring","resourceVersion":"2564824","uid":"068ae13b-6448-4793-b843-c9ce0ea1200f"}}
+  creationTimestamp: "2026-04-12T06:41:36Z"
+  name: prometheus-config
+  namespace: monitoring
+  resourceVersion: "2576754"
+  uid: 068ae13b-6448-4793-b843-c9ce0ea1200f

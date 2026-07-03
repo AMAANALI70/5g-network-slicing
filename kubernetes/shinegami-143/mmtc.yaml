@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmtc-app
+  namespace: mmtc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mmtc-app
+  template:
+    metadata:
+      labels:
+        app: mmtc-app
+    spec:
+      containers:
+      - name: mmtc-container
+        image: mmtc-app
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 9000
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "64Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"

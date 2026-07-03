@@ -1,0 +1,1 @@
+timestamp,urllc_rtt_ms,embb_throughput_mbps,mmtc_msgs_total,embb_tc_rate_mbit,orchestrator_state,violation_count,recovery_streak,throttle_total,restore_total,loop_count,cpu_embb_cores,cpu_urllc_cores,cpu_mmtc_cores,mem_embb_mi,mem_urllc_mi,mem_mmtc_mi,node_cpu_pct,pod_restarts_embb,pod_restarts_urllc,pod_restarts_mmtc,sla_label

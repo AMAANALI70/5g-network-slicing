@@ -1,0 +1,73 @@
+{
+  "ts": "2026-06-01T16:22:50.101805+00:00",
+  "overall": "WARN",
+  "prereqs_missing": [],
+  "checks": [
+    {
+      "metric": "rtt_ms",
+      "ground_truth": 15.0,
+      "prom_value": 12.57,
+      "source_a": "SSH_log(median3)",
+      "source_b": "Orch_:9200",
+      "delta": 2.43,
+      "unit": "ms",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "metric": "embb_mbps",
+      "ground_truth": 173.22456319999998,
+      "prom_value": 173.22,
+      "source_a": "Prometheus_irate",
+      "source_b": "Orch_export",
+      "delta": 0.0046,
+      "unit": "Mbps",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "metric": "mmtc_pdr",
+      "ground_truth": 1.0,
+      "prom_value": 1.0,
+      "source_a": "SSH_log",
+      "source_b": "Prometheus_orch",
+      "delta": 0.0,
+      "unit": "(ratio)",
+      "status": "PASS",
+      "note": ""
+    },
+    {
+      "metric": "tc_rate",
+      "ground_truth": 1000,
+      "prom_value": 100.0,
+      "source_a": "SSH_tc_qdisc",
+      "source_b": "Orch_:9200",
+      "delta": 900.0,
+      "unit": "Mbit",
+      "status": "WARN",
+      "note": "Dry-run divergence: hardware=1000Mbit orch_state=100Mbit — expected in --dry-run mode"
+    },
+    {
+      "metric": "drops",
+      "ground_truth": 0,
+      "prom_value": null,
+      "source_a": "SSH_urllc_fails",
+      "source_b": "(standalone)",
+      "delta": null,
+      "unit": "count",
+      "status": "PASS",
+      "note": "3 tunnels, 0 fails"
+    },
+    {
+      "metric": "load_frac",
+      "ground_truth": 0.9,
+      "prom_value": 0.9,
+      "source_a": "Orch_:9200",
+      "source_b": "Prometheus_scrape",
+      "delta": 0.0,
+      "unit": "(ratio)",
+      "status": "PASS",
+      "note": ""
+    }
+  ]
+}

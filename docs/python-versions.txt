@@ -1,0 +1,2 @@
+Python 3.10.12
+kube VM: Python 3.10.12

@@ -1,0 +1,106 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"embb-app","slice":"embb"},"name":"embb-app","namespace":"embb"},"spec":{"ports":[{"name":"hls","nodePort":30880,"port":8080,"targetPort":8080}],"selector":{"app":"embb-app"},"type":"NodePort"}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    labels:
+      app: embb-app
+      slice: embb
+    name: embb-app
+    namespace: embb
+    resourceVersion: "2521683"
+    uid: 7189e7cc-857f-4386-9627-8c84a7bbb11a
+  spec:
+    clusterIP: 10.109.126.231
+    clusterIPs:
+    - 10.109.126.231
+    externalTrafficPolicy: Cluster
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: hls
+      nodePort: 30880
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: embb-app
+    sessionAffinity: None
+    type: NodePort
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"upf-embb","slice":"embb"},"name":"upf-embb-metrics","namespace":"embb"},"spec":{"ports":[{"name":"metrics","port":9090,"targetPort":9090}],"selector":{"app":"upf-embb"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    labels:
+      app: upf-embb
+      slice: embb
+    name: upf-embb-metrics
+    namespace: embb
+    resourceVersion: "4624"
+    uid: d158a240-92ae-4ecd-9490-bf3730c423c3
+  spec:
+    clusterIP: 10.104.23.11
+    clusterIPs:
+    - 10.104.23.11
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+    selector:
+      app: upf-embb
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"upf-embb-node2","slice":"embb"},"name":"upf-embb-node2-metrics","namespace":"embb"},"spec":{"ports":[{"name":"metrics","port":9090,"targetPort":9090}],"selector":{"app":"upf-embb-node2"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    labels:
+      app: upf-embb-node2
+      slice: embb
+    name: upf-embb-node2-metrics
+    namespace: embb
+    resourceVersion: "4604"
+    uid: a33ff78e-879f-4292-83b1-c99b64e10581
+  spec:
+    clusterIP: 10.105.149.76
+    clusterIPs:
+    - 10.105.149.76
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: metrics
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+    selector:
+      app: upf-embb-node2
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+kind: List
+metadata:
+  resourceVersion: ""

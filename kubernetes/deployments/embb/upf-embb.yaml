@@ -1,0 +1,123 @@
+---
+# ============================================================
+# eMBB UPF — ConfigMap
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: upf-embb-config
+  namespace: embb
+data:
+  upf-embb.yaml: |
+    logger:
+      file:
+        path: /var/log/open5gs/upf-embb.log
+      level: info
+    global:
+      max:
+        ue: 1024
+    upf:
+      pfcp:
+        server:
+          - address: 192.168.49.172
+            port: 8805
+      gtpu:
+        server:
+          - address: 192.168.49.172
+            port: 2152
+      session:
+        - subnet: 10.45.0.0/24
+          gateway: 10.45.0.1
+          dev: ogstun-embb
+          dnn: internet
+
+---
+# ============================================================
+# eMBB UPF — Deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: upf-embb
+  namespace: embb
+  labels:
+    app: upf-embb
+    slice: embb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: upf-embb
+  template:
+    metadata:
+      labels:
+        app: upf-embb
+        slice: embb
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: kube
+      containers:
+        - name: upf
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]
+          env:
+            - name: TUN_DEV
+              value: "ogstun-embb"
+            - name: UE_SUBNET
+              value: "10.45.0.0/24"
+            - name: UE_GATEWAY
+              value: "10.45.0.1/24"
+            - name: UPF_CONFIG
+              value: "/config/upf-embb.yaml"
+            # tc shaping: eMBB = high bandwidth
+            - name: TC_RATE
+              value: "100mbit"
+            - name: TC_CEIL
+              value: "100mbit"
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: dev-net-tun
+              mountPath: /dev/net/tun
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: config
+          configMap:
+            name: upf-embb-config
+        - name: dev-net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+
+---
+# ============================================================
+# eMBB UPF — Metrics Service
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: upf-embb-metrics
+  namespace: embb
+  labels:
+    app: upf-embb
+    slice: embb
+spec:
+  type: ClusterIP
+  selector:
+    app: upf-embb
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090

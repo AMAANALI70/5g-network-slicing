@@ -1,0 +1,612 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "10"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"embb-app","slice":"embb","tier":"application"},"name":"embb-app","namespace":"embb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"embb-app"}},"template":{"metadata":{"labels":{"app":"embb-app","slice":"embb","tier":"application"}},"spec":{"containers":[{"image":"nginx:alpine","name":"nginx-hls","ports":[{"containerPort":8080,"name":"hls"}],"readinessProbe":{"httpGet":{"path":"/hls/master.m3u8","port":8080},"initialDelaySeconds":5,"periodSeconds":5},"resources":{"limits":{"cpu":"1000m","memory":"512Mi"},"requests":{"cpu":"200m","memory":"128Mi"}},"volumeMounts":[{"mountPath":"/usr/share/nginx/html","name":"hls-data"},{"mountPath":"/etc/nginx/conf.d","name":"nginx-config"}]}],"initContainers":[{"args":["set -e\nmkdir -p /data/hls/360p /data/hls/720p /data/hls/1080p\necho \"Generating 360p HLS (low quality)...\"\nffmpeg -f lavfi -i \"testsrc2=duration=300:size=640x360:rate=25\" \\\n       -f lavfi -i \"sine=frequency=440:duration=300:sample_rate=44100\" \\\n       -c:v libx264 -preset ultrafast -b:v 450k -maxrate 500k -bufsize 1000k \\\n       -c:a aac -b:a 64k -ac 2 \\\n       -hls_time 4 -hls_list_size 0 -hls_flags independent_segments \\\n       -hls_segment_filename '/data/hls/360p/seg%04d.ts' \\\n       /data/hls/360p/index.m3u8 -y 2\u003e\u00261 | tail -3\necho \"Generating 720p HLS (medium quality)...\"\nffmpeg -f lavfi -i \"testsrc2=duration=300:size=1280x720:rate=25\" \\\n       -f lavfi -i \"sine=frequency=660:duration=300:sample_rate=44100\" \\\n       -c:v libx264 -preset ultrafast -b:v 1800k -maxrate 2000k -bufsize 4000k \\\n       -c:a aac -b:a 128k -ac 2 \\\n       -hls_time 4 -hls_list_size 0 -hls_flags independent_segments \\\n       -hls_segment_filename '/data/hls/720p/seg%04d.ts' \\\n       /data/hls/720p/index.m3u8 -y 2\u003e\u00261 | tail -3\necho \"Generating 1080p HLS (high quality)...\"\nffmpeg -f lavfi -i \"testsrc2=duration=300:size=1920x1080:rate=25\" \\\n       -f lavfi -i \"sine=frequency=880:duration=300:sample_rate=44100\" \\\n       -c:v libx264 -preset ultrafast -b:v 3800k -maxrate 4200k -bufsize 8400k \\\n       -c:a aac -b:a 192k -ac 2 \\\n       -hls_time 4 -hls_list_size 0 -hls_flags independent_segments \\\n       -hls_segment_filename '/data/hls/1080p/seg%04d.ts' \\\n       /data/hls/1080p/index.m3u8 -y 2\u003e\u00261 | tail -3\ncat \u003e /data/hls/master.m3u8 \u003c\u003c 'PLAYLIST'\n#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-STREAM-INF:BANDWIDTH=514000,RESOLUTION=640x360,CODECS=\"avc1.42e01e,mp4a.40.2\"\n360p/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=1928000,RESOLUTION=1280x720,CODECS=\"avc1.42e01e,mp4a.40.2\"\n720p/index.m3u8\n#EXT-X-STREAM-INF:BANDWIDTH=3992000,RESOLUTION=1920x1080,CODECS=\"avc1.42e01e,mp4a.40.2\"\n1080p/index.m3u8\nPLAYLIST\n# Fix whitespace in playlist\nsed -i 's/^              //' /data/hls/master.m3u8\nls -lh /data/hls/\necho \"HLS generation complete. Ready to serve.\"\n"],"command":["/bin/sh","-c"],"image":"jrottenberg/ffmpeg:4.4-alpine","name":"hls-generator","resources":{"limits":{"cpu":"4000m","memory":"1Gi"},"requests":{"cpu":"2000m","memory":"512Mi"}},"volumeMounts":[{"mountPath":"/data","name":"hls-data"}]}],"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"emptyDir":{"sizeLimit":"2Gi"},"name":"hls-data"},{"configMap":{"name":"embb-nginx-hls-config"},"name":"nginx-config"}]}}}}
+    creationTimestamp: "2026-04-12T07:10:13Z"
+    generation: 186
+    labels:
+      app: embb-app
+      slice: embb
+      tier: application
+    name: embb-app
+    namespace: embb
+    resourceVersion: "8691413"
+    uid: 8afe156d-d00f-43fb-8a48-d73d615911f4
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: embb-app
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-05-27T15:25:07+05:30"
+        creationTimestamp: null
+        labels:
+          app: embb-app
+          slice: embb
+          tier: application
+      spec:
+        containers:
+        - image: nginx:alpine
+          imagePullPolicy: IfNotPresent
+          name: nginx-hls
+          ports:
+          - containerPort: 8080
+            name: hls
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /hls/master.m3u8
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /usr/share/nginx/html
+            name: hls-data
+          - mountPath: /etc/nginx/conf.d
+            name: nginx-config
+        dnsPolicy: ClusterFirst
+        initContainers:
+        - args:
+          - |
+            set -e
+            mkdir -p /data/hls/360p /data/hls/720p /data/hls/1080p
+            echo "Generating 360p HLS (low quality)..."
+            ffmpeg -f lavfi -i "testsrc2=duration=300:size=640x360:rate=25" \
+                   -f lavfi -i "sine=frequency=440:duration=300:sample_rate=44100" \
+                   -c:v libx264 -preset ultrafast -b:v 450k -maxrate 500k -bufsize 1000k \
+                   -c:a aac -b:a 64k -ac 2 \
+                   -hls_time 4 -hls_list_size 0 -hls_flags independent_segments \
+                   -hls_segment_filename '/data/hls/360p/seg%04d.ts' \
+                   /data/hls/360p/index.m3u8 -y 2>&1 | tail -3
+            echo "Generating 720p HLS (medium quality)..."
+            ffmpeg -f lavfi -i "testsrc2=duration=300:size=1280x720:rate=25" \
+                   -f lavfi -i "sine=frequency=660:duration=300:sample_rate=44100" \
+                   -c:v libx264 -preset ultrafast -b:v 1800k -maxrate 2000k -bufsize 4000k \
+                   -c:a aac -b:a 128k -ac 2 \
+                   -hls_time 4 -hls_list_size 0 -hls_flags independent_segments \
+                   -hls_segment_filename '/data/hls/720p/seg%04d.ts' \
+                   /data/hls/720p/index.m3u8 -y 2>&1 | tail -3
+            echo "Generating 1080p HLS (high quality)..."
+            ffmpeg -f lavfi -i "testsrc2=duration=300:size=1920x1080:rate=25" \
+                   -f lavfi -i "sine=frequency=880:duration=300:sample_rate=44100" \
+                   -c:v libx264 -preset ultrafast -b:v 3800k -maxrate 4200k -bufsize 8400k \
+                   -c:a aac -b:a 192k -ac 2 \
+                   -hls_time 4 -hls_list_size 0 -hls_flags independent_segments \
+                   -hls_segment_filename '/data/hls/1080p/seg%04d.ts' \
+                   /data/hls/1080p/index.m3u8 -y 2>&1 | tail -3
+            cat > /data/hls/master.m3u8 << 'PLAYLIST'
+            #EXTM3U
+            #EXT-X-VERSION:3
+            #EXT-X-STREAM-INF:BANDWIDTH=514000,RESOLUTION=640x360,CODECS="avc1.42e01e,mp4a.40.2"
+            360p/index.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=1928000,RESOLUTION=1280x720,CODECS="avc1.42e01e,mp4a.40.2"
+            720p/index.m3u8
+            #EXT-X-STREAM-INF:BANDWIDTH=3992000,RESOLUTION=1920x1080,CODECS="avc1.42e01e,mp4a.40.2"
+            1080p/index.m3u8
+            PLAYLIST
+            # Fix whitespace in playlist
+            sed -i 's/^              //' /data/hls/master.m3u8
+            ls -lh /data/hls/
+            echo "HLS generation complete. Ready to serve."
+          command:
+          - /bin/sh
+          - -c
+          image: jrottenberg/ffmpeg:4.4-alpine
+          imagePullPolicy: IfNotPresent
+          name: hls-generator
+          resources:
+            limits:
+              cpu: 600m
+              memory: 1Gi
+            requests:
+              cpu: 200m
+              memory: 512Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: hls-data
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - emptyDir:
+            sizeLimit: 2Gi
+          name: hls-data
+        - configMap:
+            defaultMode: 420
+            name: embb-nginx-hls-config
+          name: nginx-config
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-05-27T09:55:07Z"
+      lastUpdateTime: "2026-05-27T10:01:37Z"
+      message: ReplicaSet "embb-app-78fdbdbc8" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-07-02T14:31:02Z"
+      lastUpdateTime: "2026-07-02T14:31:02Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 186
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "3"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"upf-embb","slice":"embb"},"name":"upf-embb","namespace":"embb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"upf-embb"}},"template":{"metadata":{"labels":{"app":"upf-embb","slice":"embb"}},"spec":{"containers":[{"env":[{"name":"TUN_DEV","value":"ogstun-embb"},{"name":"UE_SUBNET","value":"10.45.0.0/24"},{"name":"UE_GATEWAY","value":"10.45.0.1/24"},{"name":"UPF_CONFIG","value":"/config/upf-embb.yaml"},{"name":"TC_RATE","value":"100mbit"},{"name":"TC_CEIL","value":"100mbit"}],"image":"192.168.49.174:5000/open5gs-upf:local","imagePullPolicy":"IfNotPresent","name":"upf","resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN","SYS_ADMIN"]},"privileged":true},"volumeMounts":[{"mountPath":"/config","name":"config"},{"mountPath":"/dev/net/tun","name":"dev-net-tun"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"configMap":{"name":"upf-embb-config"},"name":"config"},{"hostPath":{"path":"/dev/net/tun","type":"CharDevice"},"name":"dev-net-tun"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 3
+    labels:
+      app: upf-embb
+      slice: embb
+    name: upf-embb
+    namespace: embb
+    resourceVersion: "8690880"
+    uid: cbaedeae-48dd-488f-b061-497feb63d12d
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: upf-embb
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-05-26T17:15:47+05:30"
+        creationTimestamp: null
+        labels:
+          app: upf-embb
+          slice: embb
+      spec:
+        containers:
+        - env:
+          - name: TUN_DEV
+            value: ogstun-embb
+          - name: UE_SUBNET
+            value: 10.45.0.0/24
+          - name: UE_GATEWAY
+            value: 10.45.0.1/24
+          - name: UPF_CONFIG
+            value: /config/upf-embb.yaml
+          - name: TC_RATE
+            value: 100mbit
+          - name: TC_CEIL
+            value: 100mbit
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          name: upf
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+              - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: config
+          - mountPath: /dev/net/tun
+            name: dev-net-tun
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: upf-embb-config
+          name: config
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: dev-net-tun
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-05-26T13:45:57Z"
+      lastUpdateTime: "2026-05-26T13:54:13Z"
+      message: ReplicaSet "upf-embb-5d448f6f78" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-07-02T14:25:46Z"
+      lastUpdateTime: "2026-07-02T14:25:46Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 3
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "2"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"upf-embb-node2","slice":"embb"},"name":"upf-embb-node2","namespace":"embb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"upf-embb-node2"}},"template":{"metadata":{"labels":{"app":"upf-embb-node2","slice":"embb"}},"spec":{"containers":[{"env":[{"name":"TUN_DEV","value":"ogstun-embb"},{"name":"UE_SUBNET","value":"10.45.0.0/24"},{"name":"UE_GATEWAY","value":"10.45.0.1/24"},{"name":"UPF_CONFIG","value":"/config/upf-embb.yaml"},{"name":"TC_RATE","value":"100mbit"},{"name":"TC_CEIL","value":"100mbit"}],"image":"192.168.49.174:5000/open5gs-upf:local","imagePullPolicy":"IfNotPresent","name":"upf","resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN","SYS_ADMIN"]},"privileged":true},"volumeMounts":[{"mountPath":"/config","name":"config"},{"mountPath":"/dev/net/tun","name":"dev-net-tun"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kube2"},"volumes":[{"configMap":{"name":"upf-embb-node2-config"},"name":"config"},{"hostPath":{"path":"/dev/net/tun","type":"CharDevice"},"name":"dev-net-tun"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 2
+    labels:
+      app: upf-embb-node2
+      slice: embb
+    name: upf-embb-node2
+    namespace: embb
+    resourceVersion: "4417785"
+    uid: 53920009-0b62-4041-abb8-a8737304deeb
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: upf-embb-node2
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-05-26T17:15:47+05:30"
+        creationTimestamp: null
+        labels:
+          app: upf-embb-node2
+          slice: embb
+      spec:
+        containers:
+        - env:
+          - name: TUN_DEV
+            value: ogstun-embb
+          - name: UE_SUBNET
+            value: 10.45.0.0/24
+          - name: UE_GATEWAY
+            value: 10.45.0.1/24
+          - name: UPF_CONFIG
+            value: /config/upf-embb.yaml
+          - name: TC_RATE
+            value: 100mbit
+          - name: TC_CEIL
+            value: 100mbit
+          image: 192.168.49.174:5000/open5gs-upf:local
+          imagePullPolicy: IfNotPresent
+          name: upf
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+              - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: config
+          - mountPath: /dev/net/tun
+            name: dev-net-tun
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kube2
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: upf-embb-node2-config
+          name: config
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: dev-net-tun
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-12T06:41:36Z"
+      lastUpdateTime: "2026-05-26T11:46:00Z"
+      message: ReplicaSet "upf-embb-node2-5bb79988d" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-05-27T05:48:19Z"
+      lastUpdateTime: "2026-05-27T05:48:19Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    observedGeneration: 2
+    replicas: 1
+    unavailableReplicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"upf-node1","component":"upf"},"name":"upf-node1","namespace":"embb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"upf-node1"}},"template":{"metadata":{"labels":{"app":"upf-node1","component":"upf"}},"spec":{"containers":[{"env":[{"name":"UPF_CONFIG","value":"/config/upf.yaml"},{"name":"TUN_DEVICES","value":"ogstun-embb:10.45.0.0/24:10.45.0.1/24,ogstun-urllc:10.46.0.0/24:10.46.0.1/24,ogstun-mmtc:10.47.0.0/24:10.47.0.1/24"},{"name":"TC_DEV","value":"ogstun-embb"},{"name":"TC_RATE","value":"100mbit"},{"name":"TC_CEIL","value":"100mbit"}],"image":"192.168.49.174:5000/open5gs-upf-unified:v1","imagePullPolicy":"Always","name":"upf","resources":{"limits":{"cpu":"1500m","memory":"1Gi"},"requests":{"cpu":"200m","memory":"256Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN","SYS_ADMIN"]},"privileged":true},"volumeMounts":[{"mountPath":"/config","name":"config"},{"mountPath":"/dev/net/tun","name":"dev-net-tun"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kube"},"volumes":[{"configMap":{"name":"upf-node1-config"},"name":"config"},{"hostPath":{"path":"/dev/net/tun","type":"CharDevice"},"name":"dev-net-tun"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 1
+    labels:
+      app: upf-node1
+      component: upf
+    name: upf-node1
+    namespace: embb
+    resourceVersion: "5908"
+    uid: cf54ea6e-f595-4e3e-8d77-f0d4b4e1cb0f
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: upf-node1
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: upf-node1
+          component: upf
+      spec:
+        containers:
+        - env:
+          - name: UPF_CONFIG
+            value: /config/upf.yaml
+          - name: TUN_DEVICES
+            value: ogstun-embb:10.45.0.0/24:10.45.0.1/24,ogstun-urllc:10.46.0.0/24:10.46.0.1/24,ogstun-mmtc:10.47.0.0/24:10.47.0.1/24
+          - name: TC_DEV
+            value: ogstun-embb
+          - name: TC_RATE
+            value: 100mbit
+          - name: TC_CEIL
+            value: 100mbit
+          image: 192.168.49.174:5000/open5gs-upf-unified:v1
+          imagePullPolicy: Always
+          name: upf
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 1Gi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+              - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: config
+          - mountPath: /dev/net/tun
+            name: dev-net-tun
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kube
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: upf-node1-config
+          name: config
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: dev-net-tun
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-12T06:41:37Z"
+      lastUpdateTime: "2026-04-12T06:41:37Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    - lastTransitionTime: "2026-04-12T06:41:36Z"
+      lastUpdateTime: "2026-04-12T06:41:36Z"
+      message: 'pods "upf-node1-c7dd6478d-4gc6g" is forbidden: exceeded quota: embb-quota,
+        requested: limits.cpu=1500m,limits.memory=1Gi, used: limits.cpu=1,limits.memory=1Gi,
+        limited: limits.cpu=2,limits.memory=1Gi'
+      reason: FailedCreate
+      status: "True"
+      type: ReplicaFailure
+    - lastTransitionTime: "2026-04-12T06:51:37Z"
+      lastUpdateTime: "2026-04-12T06:51:37Z"
+      message: ReplicaSet "upf-node1-c7dd6478d" has timed out progressing.
+      reason: ProgressDeadlineExceeded
+      status: "False"
+      type: Progressing
+    observedGeneration: 1
+    unavailableReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"upf-node2","component":"upf"},"name":"upf-node2","namespace":"embb"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"upf-node2"}},"template":{"metadata":{"labels":{"app":"upf-node2","component":"upf"}},"spec":{"containers":[{"env":[{"name":"UPF_CONFIG","value":"/config/upf.yaml"},{"name":"TUN_DEVICES","value":"ogstun-embb:10.45.0.0/24:10.45.0.1/24,ogstun-urllc:10.46.0.0/24:10.46.0.1/24,ogstun-mmtc:10.47.0.0/24:10.47.0.1/24"},{"name":"TC_DEV","value":"ogstun-embb"},{"name":"TC_RATE","value":"100mbit"},{"name":"TC_CEIL","value":"100mbit"}],"image":"192.168.49.174:5000/open5gs-upf-unified:v1","imagePullPolicy":"Always","name":"upf","resources":{"limits":{"cpu":"1500m","memory":"1Gi"},"requests":{"cpu":"200m","memory":"256Mi"}},"securityContext":{"capabilities":{"add":["NET_ADMIN","SYS_ADMIN"]},"privileged":true},"volumeMounts":[{"mountPath":"/config","name":"config"},{"mountPath":"/dev/net/tun","name":"dev-net-tun"}]}],"dnsPolicy":"ClusterFirstWithHostNet","hostNetwork":true,"nodeSelector":{"kubernetes.io/hostname":"kube2"},"volumes":[{"configMap":{"name":"upf-node2-config"},"name":"config"},{"hostPath":{"path":"/dev/net/tun","type":"CharDevice"},"name":"dev-net-tun"}]}}}}
+    creationTimestamp: "2026-04-12T06:41:36Z"
+    generation: 1
+    labels:
+      app: upf-node2
+      component: upf
+    name: upf-node2
+    namespace: embb
+    resourceVersion: "5905"
+    uid: 12373f28-9828-43c0-a8d5-a65e8abbe82e
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: upf-node2
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: upf-node2
+          component: upf
+      spec:
+        containers:
+        - env:
+          - name: UPF_CONFIG
+            value: /config/upf.yaml
+          - name: TUN_DEVICES
+            value: ogstun-embb:10.45.0.0/24:10.45.0.1/24,ogstun-urllc:10.46.0.0/24:10.46.0.1/24,ogstun-mmtc:10.47.0.0/24:10.47.0.1/24
+          - name: TC_DEV
+            value: ogstun-embb
+          - name: TC_RATE
+            value: 100mbit
+          - name: TC_CEIL
+            value: 100mbit
+          image: 192.168.49.174:5000/open5gs-upf-unified:v1
+          imagePullPolicy: Always
+          name: upf
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 1Gi
+            requests:
+              cpu: 200m
+              memory: 256Mi
+          securityContext:
+            capabilities:
+              add:
+              - NET_ADMIN
+              - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /config
+            name: config
+          - mountPath: /dev/net/tun
+            name: dev-net-tun
+        dnsPolicy: ClusterFirstWithHostNet
+        hostNetwork: true
+        nodeSelector:
+          kubernetes.io/hostname: kube2
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: upf-node2-config
+          name: config
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: dev-net-tun
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-12T06:41:37Z"
+      lastUpdateTime: "2026-04-12T06:41:37Z"
+      message: Deployment does not have minimum availability.
+      reason: MinimumReplicasUnavailable
+      status: "False"
+      type: Available
+    - lastTransitionTime: "2026-04-12T06:41:36Z"
+      lastUpdateTime: "2026-04-12T06:41:36Z"
+      message: 'pods "upf-node2-96f955c6-7zglk" is forbidden: exceeded quota: embb-quota,
+        requested: limits.cpu=1500m,limits.memory=1Gi, used: limits.cpu=1,limits.memory=1Gi,
+        limited: limits.cpu=2,limits.memory=1Gi'
+      reason: FailedCreate
+      status: "True"
+      type: ReplicaFailure
+    - lastTransitionTime: "2026-04-12T06:51:37Z"
+      lastUpdateTime: "2026-04-12T06:51:37Z"
+      message: ReplicaSet "upf-node2-96f955c6" has timed out progressing.
+      reason: ProgressDeadlineExceeded
+      status: "False"
+      type: Progressing
+    observedGeneration: 1
+    unavailableReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""
