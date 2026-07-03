@@ -10,7 +10,7 @@
 
 ---
 
-## 🏗 Architecture Overview
+## 🏗 Architecture Overview:
 
 This project implements a **Hierarchical Multi-Agent Orchestration System** for 5G network slicing across three distinct slice types:
 
