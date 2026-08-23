@@ -22,7 +22,8 @@ This project implements a **Hierarchical Multi-Agent Orchestration System** for 
 
 ### Physical VM Topology
 
-(https://github.com/AMAANALI70/5g-network-slicing/blob/main/system_archie_final.png)
+![Uploading system_archie_final.png…]()
+
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
