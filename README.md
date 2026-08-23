@@ -22,7 +22,8 @@ This project implements a **Hierarchical Multi-Agent Orchestration System** for 
 
 ### Physical VM Topology
 
-![Uploading system_archie_final.png…]()
+<img width="9226" height="5642" alt="system_archie_final" src="https://github.com/user-attachments/assets/98e03845-750a-4c19-b346-d1635befaded" />
+
 
 
 ```
